@@ -1,24 +1,43 @@
-# Selectivity::Rails
+# Selectivity.js for Rails' Asset Pipeline
 
-TODO: Write a gem description
+[Selectivity.js](https://github.com/arendjr/selectivity) is a modular and light-weight selection library for jQuery and Zepto.js.
 
-## Installation
+## Installation and usage
 
-Add this line to your application's Gemfile:
+Add `selectivity-rails` to Gemfile of your Rails application and run `bundle install`:
 
-    gem 'selectivity-rails'
+```
+gem 'selectivity-rails'
+```
 
-And then execute:
+### JavaScript
+Add the following to your JavaScript manifest, by default `app/assets/javascripts/application.js`:
 
-    $ bundle
+```javascript
+//= require selectivity
+```
 
-Or install it yourself as:
+### Stylesheets
+Add the following to your stylesheet manifest, by default `app/assets/stylesheets/application.sass`:
 
-    $ gem install selectivity-rails
+```sass
+@import 'selectivity'
+```
 
-## Usage
+If you use `application.css` default format, you might not be able to access mixins or variables. Use `.scss` or `.sass` syntax instead.
 
-TODO: Write usage instructions here
+#### Customization
+Selectivity.js is written in Sass and allows basic customization. For the list of all supported variables refer to [selectivity/variables.sass](https://github.com/msx2/selectivity-rails/blob/master/vendor/assets/stylesheets/selectivity/variables.sass)
+
+To use customization, import your `variables` file before `selectivity`:
+
+```sass
+@import 'variables'
+@import 'selectivity'
+```
+
+## RSpec helper
+TODO
 
 ## Contributing
 

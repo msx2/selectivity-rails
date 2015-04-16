@@ -29,6 +29,13 @@ Add the following to your stylesheet manifest, by default `app/assets/stylesheet
 
 If you use `application.css` default format, you might not be able to access mixins or variables. Use `.scss` or `.sass` syntax instead.
 
+For the basic styling supporting [`simple_form`](https://github.com/plataformatec/simple_form) and [Bootstrap](http://getbootstrap.com), import also `selectivity_bootstrap` stylesheet:
+
+```sass
+@import 'selectivity'
+@import 'selectivity_bootstrap'
+```
+
 #### Customization
 Selectivity.js is written in Sass and allows basic customization. For the list of all supported variables refer to [selectivity/variables.sass](https://github.com/msx2/selectivity-rails/blob/master/vendor/assets/stylesheets/selectivity/variables.sass)
 

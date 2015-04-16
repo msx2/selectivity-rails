@@ -20,6 +20,19 @@ Add the following to your JavaScript manifest, by default `app/assets/javascript
 //= require selectivity
 ```
 
+#### Internationalization (i18n)
+Selectivity.js uses English by default, however `selectivity-rails` supports multiple languages. Add the following to your JavaScript manifest, e.g. `app/assets/javascripts/application.js`:
+
+```javascript
+//= require selectivity.xx
+```
+
+where `xx` is the code of supported language. Currently supported are:
+
+Code | Language
+--- | ---
+`pl_PL` | Polish
+
 ### Stylesheets
 Add the following to your stylesheet manifest, by default `app/assets/stylesheets/application.sass`:
 

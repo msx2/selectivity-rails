@@ -1,3 +1,6 @@
+[![Gem Version](https://badge.fury.io/rb/selectivity-rails.svg)](http://badge.fury.io/rb/selectivity-rails)
+[![Code Climate](https://codeclimate.com/github/msx2/selectivity-rails/badges/gpa.svg)](https://codeclimate.com/github/msx2/selectivity-rails)
+
 # Selectivity.js for Rails' Asset Pipeline
 
 [Selectivity.js](https://github.com/arendjr/selectivity) is a modular and light-weight selection library for jQuery and Zepto.js.

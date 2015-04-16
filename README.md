@@ -36,6 +36,17 @@ To use customization, import your `variables` file before `selectivity`:
 @import 'selectivity'
 ```
 
+#### Icons: Font Awesome
+By default, Selectivity.js uses [Font Awesome](http://fortawesome.github.io/Font-Awesome) icons.
+
+If you don't use Font Awesome, you can install [`font-awesome-rails`](https://github.com/bokmann/font-awesome-rails) gem, or manually override styling for following CSS classes:
+
+```sass
+.fa.fa-remove
+.fa.fa-chevron-right
+.fa.fa-sort-desc
+```
+
 ## RSpec helper
 TODO
 

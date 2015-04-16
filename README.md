@@ -33,6 +33,8 @@ Code | Language
 --- | ---
 `pl_PL` | Polish
 
+I18n file should be included **after** default `selectivity` script.
+
 ### Stylesheets
 Add the following to your stylesheet manifest, by default `app/assets/stylesheets/application.sass`:
 

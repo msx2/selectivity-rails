@@ -3146,15 +3146,10 @@ function MultipleSelectivity(options) {
 
     Selectivity.call(this, options);
 
-    this.$el.html(this.template('multipleSelectInput', { enabled: this.enabled }));
+    this.$el.html(this.template('multipleSelectInput', { enabled: this.enabled }))
+            .trigger('selectivity-init', 'multiple');
 
     this._highlightedItemId = null;
-
-    var selectName = this.$el.attr('data-name');
-    if (selectName) {
-        this.$el.append(this.template('multipleSelectCompliance', selectName));
-        this.$el.removeAttr('data-name');
-    }
 
     this.initSearchInput(this.$('.selectivity-multiple-input:not(.selectivity-width-detector)'));
 
@@ -3573,17 +3568,10 @@ var callSuper = Selectivity.inherits(MultipleSelectivity, {
 
     _renderSelectedItem: function(item) {
 
-        var options = $.extend({
+        this.$searchInput.before(this.template('multipleSelectedItem', $.extend({
             highlighted: (item.id === this._highlightedItemId),
             removable: !this.options.readOnly
-        }, item);
-
-        this.$searchInput.before(this.template('multipleSelectedItem', options));
-
-        var $select = this.$('select');
-        if ($select.length) {
-            $select.append(this.template('selectOptionCompliance', options));
-        }
+        }, item)));
 
         var quotedId = Selectivity.quoteCssAttr(item.id);
         this.$('.selectivity-multiple-selected-item[data-item-id=' + quotedId + ']')
@@ -3596,8 +3584,6 @@ var callSuper = Selectivity.inherits(MultipleSelectivity, {
      */
     _rerenderSelection: function(event) {
 
-        var $select = this.$('select');
-
         event = event || {};
 
         if (event.added) {
@@ -3607,9 +3593,6 @@ var callSuper = Selectivity.inherits(MultipleSelectivity, {
         } else if (event.removed) {
             var quotedId = Selectivity.quoteCssAttr(event.removed.id);
             this.$('.selectivity-multiple-selected-item[data-item-id=' + quotedId + ']').remove();
-            if ($select.length) {
-                $select.find('[value=' + quotedId + ']').remove();
-            }
         } else {
             this.$('.selectivity-multiple-selected-item').remove();
 
@@ -3706,13 +3689,8 @@ function SingleSelectivity(options) {
 
     Selectivity.call(this, options);
 
-    this.$el.html(this.template('singleSelectInput', this.options));
-
-    var selectName = this.$el.attr('data-name');
-    if (selectName) {
-        this.$el.append(this.template('singleSelectCompliance', selectName));
-        this.$el.removeAttr('data-name');
-    }
+    this.$el.html(this.template('singleSelectInput', this.options))
+            .trigger('selectivity-init', 'single');
 
     this._rerenderSelection();
 
@@ -3916,28 +3894,19 @@ var callSuper = Selectivity.inherits(SingleSelectivity, {
     _rerenderSelection: function() {
 
         var $container = this.$('.selectivity-single-result-container');
-        var $select = this.$('select');
         if (this._data) {
-            var options = $.extend({
-                removable: this.options.allowClear && !this.options.readOnly
-            }, this._data);
-
-            $container.html(this.template('singleSelectedItem', options));
+            $container.html(
+                this.template('singleSelectedItem', $.extend({
+                    removable: this.options.allowClear && !this.options.readOnly
+                }, this._data))
+            );
 
             $container.find('.selectivity-single-selected-item-remove')
                       .on('click', this._itemRemoveClicked.bind(this));
-
-            if ($select.length) {
-                $select.html(this.template('selectOptionCompliance', options));
-            }
         } else {
             $container.html(
                 this.template('singleSelectPlaceholder', { placeholder: this.options.placeholder })
             );
-
-            if ($select.length) {
-                $select.html('');
-            }
         }
     },
 
@@ -4324,15 +4293,6 @@ Selectivity.Templates = {
     },
 
     /**
-     * Renders select-box inside single-select input that was initialized on
-     * traditional <select> element.
-     *
-     */
-    multipleSelectCompliance: function(name) {
-      return ('<select name="' + name + '" multiple></select>');
-    },
-
-    /**
      * Renders a message there are no results for the given query.
      *
      * @param options Options object containing the following property:
@@ -4410,15 +4370,6 @@ Selectivity.Templates = {
     ),
 
     /**
-     * Renders select-box inside single-select input that was initialized on
-     * traditional <select> element.
-     *
-     */
-    singleSelectCompliance: function(name) {
-      return ('<select name="' + name + '"></select>');
-    },
-
-    /**
      * Renders the placeholder for single-select input boxes.
      *
      * The template is expected to have a top-level element with the class
@@ -4461,18 +4412,29 @@ Selectivity.Templates = {
     },
 
     /**
+     * Renders select-box inside single-select input that was initialized on
+     * traditional <select> element.
+     *
+     * @param options Options object containing the following properties:
+     *                name - Name of the <select> element.
+     *                mode - Mode in which select exists, single or multiple.
+     */
+    selectCompliance: function(options) {
+        return ('<select name="' + options.name + '"' + (options.mode === 'multiple' ? ' multiple' : '') + '></select>');
+    },
+
+    /**
      * Renders the selected item in compliance <select> element as <option>.
      *
      * @param options Options object containing the following properties
      *                id - Identifier for the item.
-     *                removable - Boolean whether a remove icon should be displayed.
      *                text - Text label which the user sees.
      */
     selectOptionCompliance: function(options) {
         return (
             '<option value="' + escape(options.id) + '" selected>' +
-              escape(options.text) +
-            '</option'
+                escape(options.text) +
+            '</option>'
         );
     }
 
@@ -4588,14 +4550,48 @@ function replaceSelectElement($el, options) {
 
     options.value = value;
 
+    var classes = ($el.attr('class') || 'selectivity-input').split(' ');
+    if (classes.indexOf('selectivity-input') === -1) {
+        classes.push('selectivity-input');
+    }
+
     var $div = $('<div>').attr({
         'id': $el.attr('id'),
-        'class': $el.attr('class'),
+        'class': classes.join(' '),
         'style': $el.attr('style'),
         'data-name': $el.attr('name')
     });
     $el.replaceWith($div);
     return $div;
+}
+
+function bindTraditionalSelectEvents(selectivity) {
+
+    var $el = selectivity.$el;
+
+    $el.on('selectivity-init', function(event, mode) {
+
+            $el.append(selectivity.template('selectCompliance', {name: $el.attr('data-name'), mode: mode}))
+              .removeAttr('data-name');
+        })
+        .on('selectivity-init change', function() {
+            var data = selectivity._data;
+            var $select = $el.find('select');
+
+            if (data instanceof Array) {
+                $select.empty();
+
+                data.forEach(function(item) {
+                    $select.append(selectivity.template('selectOptionCompliance', item));
+                });
+            } else {
+                if (data) {
+                    $select.html(selectivity.template('selectOptionCompliance', data));
+                } else {
+                    $select.empty();
+                }
+            }
+        });
 }
 
 /**
@@ -4614,6 +4610,8 @@ Selectivity.OptionListeners.push(function(selectivity, options) {
 
         selectivity.$el = replaceSelectElement($el, options);
         selectivity.$el[0].selectivity = selectivity;
+
+        bindTraditionalSelectEvents(selectivity);
     }
 });
 

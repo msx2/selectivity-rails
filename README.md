@@ -79,7 +79,15 @@ If you don't use Font Awesome, you can install [`font-awesome-rails`](https://gi
 require 'selectivity/rspec'
 ```
 
-This includes two additional methods for all `type: :feature, js: true` specs:
+This automatically configures RSpec by adding:
+
+```ruby
+RSpec.configure do |config|
+  config.include Selectivity::Rspec::FeatureHelpers, type: :feature, js: true
+end
+```
+
+Configuration includes two additional methods for all `type: :feature, js: true` specs:
 
 ```ruby
 def selectivity_select(value, options = {}); end

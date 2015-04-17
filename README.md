@@ -72,8 +72,39 @@ If you don't use Font Awesome, you can install [`font-awesome-rails`](https://gi
 .fa.fa-sort-desc
 ```
 
-## RSpec helper
-TODO
+## RSpec helpers
+`selectivity-rails` provides RSpec feature helper methods that allow user to select or unselect elements from both single and multiple select elements. Add the following to your `spec/rails_helper.rb` (or `spec/spec_helper.rb`):
+
+```ruby
+require 'selectivity/rspec'
+```
+
+This includes two additional methods for all `type: :feature, js: true` specs:
+
+```ruby
+def selectivity_select(value, options = {}); end
+def selectivity_unselect(value, options = {}); end
+```
+
+Both methods require `from: '...'` inside `options` hash.
+
+### Example usage
+To handle single select:
+
+```ruby
+selectivity_select('Netherlands', from: '#country')
+selectivity_unselect('Netherlands', from: '#country')
+selectivity_select('Poland', from: '#country')
+```
+
+To handle multiple select:
+
+```ruby
+selectivity_select('Netherlands', from: '#countries')
+selectivity_select('Poland', from: '#countries')
+selectivity_select('Russia', from: '#countries')
+selectivity_unselect('Russia', from: '#countries')
+```
 
 ## Contributing
 

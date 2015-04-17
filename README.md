@@ -117,7 +117,7 @@ selectivity_unselect('Russia', from: '#countries')
 ## Demos and examples
 For detailed information on Selectivity.js possibilities and behavior, visit:
 
-* [Sample Rails application](https://github.com/msx2/selectivity-rails-sample-app)
+* [**Sample Rails application**](https://github.com/msx2/selectivity-rails-sample-app)
 * [Selectivity.js repository](https://github.com/arendjr/selectivity)
 * [Selectibity.js gh-page](https://arendjr.github.io/selectivity)
 

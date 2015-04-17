@@ -114,6 +114,12 @@ selectivity_select('Russia', from: '#countries')
 selectivity_unselect('Russia', from: '#countries')
 ```
 
+## Demos and examples
+For detailed information on Selectivity.js possibilities and behavior, visit:
+
+* [Selectivity.js repository](https://github.com/arendjr/selectivity)
+* [Selectibity.js gh-page](https://arendjr.github.io/selectivity)
+
 ## Contributing
 
 1. Fork it

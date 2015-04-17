@@ -90,8 +90,8 @@ end
 Configuration includes two additional methods for all `type: :feature, js: true` specs:
 
 ```ruby
-def selectivity_select(value, options = {}); end
-def selectivity_unselect(value, options = {}); end
+selectivity_select(value, options = {})
+selectivity_unselect(value, options = {})
 ```
 
 Both methods require `from: '...'` inside `options` hash.

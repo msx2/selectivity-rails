@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['konrad@jurkowski.me']
   spec.description   = %q{Selectivity.js is a modular and light-weight selection library for jQuery and Zepto.js. This gem integrates Selectivity.js with Ruby on Rails.}
   spec.summary       = %q{Integrate Selectivity.js with Ruby on Rails}
-  spec.homepage      = ''
+  spec.homepage      = 'https://github.com/msx2/selectivity-rails'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files`.split($/)

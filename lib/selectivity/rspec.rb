@@ -2,30 +2,35 @@ module Selectivity
   module Rspec
     module FeatureHelpers
 
-      def selectivity_select(value, options = {})
-        fail('Selectivity input not set!') unless options.has_key?(:from)
+      def selectivity_select(value, *args)
+        options = args.extract_options!
 
-        from = options.delete(:from)
-
-        find(:div, from, options).click
-
-        within 'div.selectivity-dropdown' do
-          if (find(:xpath, "//div[@class='selectivity-result-item'][contains(text(), '#{value}')]")).visible?
-            page.evaluate_script("$('div.selectivity-result-item:contains(#{value})').trigger('click')")
-          end
-        end
-      end
-
-      def selectivity_unselect(value, options = {})
         fail('Selectivity input not set!') unless options.has_key?(:from)
 
         from  = options.delete(:from)
         input = find(:div, from, options)
+        items = multiselect?(input) ? args.unshift(value).uniq : [value]
 
-        if multiselect?(input)
-          unselect_multiple(input, value)
-        else
-          unselect_single(input)
+        items.each do |item|
+          select(input, item)
+        end
+      end
+
+      def selectivity_unselect(value, *args)
+        options = args.extract_options!
+
+        fail('Selectivity input not set!') unless options.has_key?(:from)
+
+        from  = options.delete(:from)
+        input = find(:div, from, options)
+        items = multiselect?(input) ? args.unshift(value).uniq : [value]
+
+        items.each do |item|
+          if multiselect?(input)
+            unselect_multiple(input, item)
+          else
+            unselect_single(input)
+          end
         end
       end
 
@@ -33,6 +38,16 @@ module Selectivity
 
       def multiselect?(input)
         input.first('.selectivity-multiple-input-container').present?
+      end
+
+      def select(input, item)
+        input.click
+
+        within 'div.selectivity-dropdown' do
+          if (find(:xpath, "//div[@class='selectivity-result-item'][contains(text(), '#{item}')]")).visible?
+            page.evaluate_script("$('div.selectivity-result-item:contains(#{item})').trigger('click')")
+          end
+        end
       end
 
       def unselect_single(input)

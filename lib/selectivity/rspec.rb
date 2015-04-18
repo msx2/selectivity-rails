@@ -19,19 +19,19 @@ module Selectivity
       def selectivity_unselect(value, options = {})
         fail('Selectivity input not set!') unless options.has_key?(:from)
 
-        from              = options.delete(:from)
-        selectivity_input = find(:div, from, options)
+        from  = options.delete(:from)
+        input = find(:div, from, options)
 
-        if selectivity_multiselect?(selectivity_input)
-          unselect_multiple(selectivity_input, value)
+        if multiselect?(input)
+          unselect_multiple(input, value)
         else
-          unselect_single(selectivity_input)
+          unselect_single(input)
         end
       end
 
       private
 
-      def selectivity_multiselect?(input)
+      def multiselect?(input)
         input.first('.selectivity-multiple-input-container').present?
       end
 

@@ -108,9 +108,10 @@ selectivity_select('Poland', from: '#country')
 To handle multiple select:
 
 ```ruby
-selectivity_select('Netherlands', from: '#countries')
-selectivity_select('Poland', from: '#countries')
+selectivity_select('Netherlands', 'Russia', from: '#countries')
+# or, by single value:
 selectivity_select('Russia', from: '#countries')
+
 selectivity_unselect('Russia', from: '#countries')
 ```
 

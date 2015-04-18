@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Integrate Selectivity.js with Ruby on Rails}
   spec.homepage      = 'https://github.com/msx2/selectivity-rails'
   spec.license       = 'MIT'
+  spec.required_ruby_version = '>= 1.9.3'
 
   spec.files         = `git ls-files`.split($/)
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }

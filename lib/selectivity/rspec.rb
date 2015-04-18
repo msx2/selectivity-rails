@@ -10,7 +10,9 @@ module Selectivity
         find(:div, from, options).click
 
         within 'div.selectivity-dropdown' do
-          page.evaluate_script("$('div.selectivity-result-item:contains(#{value})').trigger('click')")
+          if (find(:xpath, "//div[@class='selectivity-result-item'][contains(text(), '#{value}')]")).visible?
+            page.evaluate_script("$('div.selectivity-result-item:contains(#{value})').trigger('click')")
+          end
         end
       end
 

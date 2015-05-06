@@ -39,7 +39,7 @@ module Selectivity
       def find_selectivity_input(from, options)
         find(:div, from, options)
       rescue Capybara::ElementNotFound
-        label = find('label', {text: from}.merge(options))
+        label = find('label', { text: from }.merge(options))
 
         find(:div, "##{label[:for]}", options)
       end

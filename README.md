@@ -94,13 +94,13 @@ selectivity_select(value, options = {})
 selectivity_unselect(value, options = {})
 ```
 
-Both methods require `from: '...'` inside `options` hash.
+Both methods require `from: '...'` inside `options` hash that is either CSS path or field's label (requires `for` attribute!).
 
 ### Example usage
 To handle single select:
 
 ```ruby
-selectivity_select('Netherlands', from: '#country')
+selectivity_select('Netherlands', from: 'Your country')
 selectivity_unselect('Netherlands', from: '#country')
 selectivity_select('Poland', from: '#country')
 ```
@@ -108,11 +108,11 @@ selectivity_select('Poland', from: '#country')
 To handle multiple select:
 
 ```ruby
-selectivity_select('Netherlands', 'Russia', 'Spain', from: '#countries')
+selectivity_select('Netherlands', 'Russia', 'Spain', from: 'Countries list')
 # or, by single value:
 selectivity_select('Poland', from: '#countries')
 
-selectivity_unselect('Russia', 'Spain', from: '#countries')
+selectivity_unselect('Russia', 'Spain', from: 'Countries list')
 # or, by single value:
 selectivity_unselect('Netherlands', from: '#countries')
 ```

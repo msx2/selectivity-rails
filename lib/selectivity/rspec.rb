@@ -8,7 +8,7 @@ module Selectivity
         fail('Selectivity input not set!') unless options.has_key?(:from)
 
         from  = options.delete(:from)
-        input = find(:div, from, options)
+        input = find_selectivity_input(from, options)
         items = multiselect?(input) ? args.unshift(value).uniq : [value]
 
         items.each do |item|
@@ -22,7 +22,7 @@ module Selectivity
         fail('Selectivity input not set!') unless options.has_key?(:from)
 
         from  = options.delete(:from)
-        input = find(:div, from, options)
+        input = find_selectivity_input(from, options)
         items = multiselect?(input) ? args.unshift(value).uniq : [value]
 
         items.each do |item|
@@ -35,6 +35,14 @@ module Selectivity
       end
 
       private
+
+      def find_selectivity_input(from, options)
+        find(:div, from, options)
+      rescue Capybara::ElementNotFound
+        label = find('label', {text: from}.merge(options))
+
+        find(:div, "##{label[:for]}", options)
+      end
 
       def multiselect?(input)
         input.first('.selectivity-multiple-input-container').present?

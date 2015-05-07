@@ -12,7 +12,7 @@ module Selectivity
         items = multiselect?(input) ? args.unshift(value).uniq : [value]
 
         items.each do |item|
-          select(input, item)
+          select!(input, item)
         end
       end
 
@@ -27,9 +27,9 @@ module Selectivity
 
         items.each do |item|
           if multiselect?(input)
-            unselect_multiple(input, item)
+            unselect_multiple!(input, item)
           else
-            unselect_single(input)
+            unselect_single!(input)
           end
         end
       end
@@ -48,7 +48,7 @@ module Selectivity
         input.first('.selectivity-multiple-input-container').present?
       end
 
-      def select(input, item)
+      def select!(input, item)
         input.click
 
         within 'div.selectivity-dropdown' do
@@ -58,11 +58,11 @@ module Selectivity
         end
       end
 
-      def unselect_single(input)
+      def unselect_single!(input)
         input.first('.selectivity-single-selected-item-remove').click
       end
 
-      def unselect_multiple(input, value)
+      def unselect_multiple!(input, value)
         input.first('.selectivity-multiple-selected-item', text: value)
              .first('.selectivity-multiple-selected-item-remove')
              .click

@@ -3,6 +3,8 @@
 
 # Selectivity.js for Rails' Asset Pipeline
 
+[![Join the chat at https://gitter.im/msx2/selectivity-rails](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/msx2/selectivity-rails?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [Selectivity.js](https://github.com/arendjr/selectivity) is a modular and light-weight selection library for jQuery and Zepto.js.
 
 ## Installation and usage

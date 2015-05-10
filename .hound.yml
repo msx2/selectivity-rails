@@ -1,7 +1,2 @@
 ruby:
-  Style/StringLiterals:
-    Enabled: true
-    EnforcedStyle: single_quotes
-  Style/StringLiteralsInInterpolation:
-    Enabled: true
-    EnforcedStyle: double_quotes
+  config_file: .hound.ruby.yml

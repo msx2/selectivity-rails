@@ -52,7 +52,7 @@ module Selectivity
         input.click
 
         within 'div.selectivity-dropdown' do
-          if (find(:xpath, "//div[@class='selectivity-result-item'][contains(text(), '#{item}')]")).visible?
+          if find('div.selectivity-result-item', text: item).visible?
             page.evaluate_script("$('div.selectivity-result-item:contains(#{item})').trigger('click')")
           end
         end

@@ -303,7 +303,7 @@ var latestQueryNum = 0;
 Selectivity.OptionListeners.push(function(selectivity, options) {
 
     var query = options.query;
-    if (query) {
+    if (query && !query._async) {
         options.query = function(queryOptions) {
             latestQueryNum++;
             var queryNum = latestQueryNum;
@@ -322,6 +322,7 @@ Selectivity.OptionListeners.push(function(selectivity, options) {
             };
             query(queryOptions);
         };
+        options.query._async = true;
     }
 });
 
@@ -2342,6 +2343,8 @@ function SelectivityDropdown(options) {
      */
     this.selectivity = selectivity;
 
+    this._closed = false;
+
     this._closeProxy = this.close.bind(this);
     if (selectivity.options.closeOnSelect !== false) {
         selectivity.$el.on('selectivity-selecting', this._closeProxy);
@@ -2400,17 +2403,21 @@ $.extend(SelectivityDropdown.prototype, EventDelegator.prototype, {
      */
     close: function() {
 
-        if (this.options.showSearchInput) {
-            this.selectivity.removeSearchInput();
+        if (!this._closed) {
+            this._closed = true;
+
+            if (this.options.showSearchInput) {
+                this.selectivity.removeSearchInput();
+            }
+
+            this.$el.remove();
+
+            this.removeCloseHandler();
+
+            this.selectivity.$el.off('selectivity-selecting', this._closeProxy);
+
+            this.triggerClose();
         }
-
-        this.$el.remove();
-
-        this.removeCloseHandler();
-
-        this.selectivity.$el.off('selectivity-selecting', this._closeProxy);
-
-        this.triggerClose();
     },
 
     /**
@@ -2422,8 +2429,7 @@ $.extend(SelectivityDropdown.prototype, EventDelegator.prototype, {
         'click .selectivity-load-more': '_loadMoreClicked',
         'click .selectivity-result-item': '_resultClicked',
         'mouseenter .selectivity-load-more': '_loadMoreHovered',
-        'mouseenter .selectivity-result-item': '_resultHovered',
-        'mousemove': '_recordMousePosition'
+        'mouseenter .selectivity-result-item': '_resultHovered'
     },
 
     /**
@@ -3012,8 +3018,8 @@ function listener(selectivity, $input) {
             }
 
             var top = position.top;
-            var elHeight = $el.height();
             var resultsHeight = dropdown.$results.height();
+            var elHeight = ($el.outerHeight ? $el.outerHeight() : $el.height());
             if (top < 0 || top > resultsHeight - elHeight) {
                 top += dropdown.$results.scrollTop();
                 dropdown.$results.scrollTop(delta < 0 ? top : top - resultsHeight + elHeight);

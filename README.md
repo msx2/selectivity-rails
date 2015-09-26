@@ -1,7 +1,6 @@
 [![Gem Version](https://badge.fury.io/rb/selectivity-rails.svg)](http://badge.fury.io/rb/selectivity-rails)
 [![Code Climate](https://codeclimate.com/github/msx2/selectivity-rails/badges/gpa.svg)](https://codeclimate.com/github/msx2/selectivity-rails)
 [![Join the chat at https://gitter.im/msx2/selectivity-rails](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/msx2/selectivity-rails?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![EL Passion](https://img.shields.io/badge/Supported%20by-EL%20Passion-36b452.svg)](https://github.com/elpassion)
 
 # Selectivity.js for Rails' Asset Pipeline
 

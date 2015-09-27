@@ -52,7 +52,13 @@ module Selectivity
         input.click
 
         within 'div.selectivity-dropdown' do
-          if find('div.selectivity-result-item', text: item).visible?
+          element = if page.driver.class.name =~ /poltergeist/i
+                      find('div.selectivity-result-item', text: item)
+                    else
+                      find(:xpath, "//div[@class='selectivity-result-item'][contains(text(), '#{item}')]")
+                    end
+
+          if element.visible?
             page.evaluate_script("$('div.selectivity-result-item:contains(#{item})').trigger('click')")
           end
         end

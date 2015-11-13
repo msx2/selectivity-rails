@@ -55,7 +55,7 @@ module Selectivity
           element = if page.driver.class.name =~ /poltergeist/i
                       find('div.selectivity-result-item', text: item)
                     else
-                      find(:xpath, "//div[contains(@class,'selectivity-result-item')][text()='#{item}']")
+                      find(:xpath, ".//div[contains(@class,'selectivity-result-item')][text()='#{item}']")
                     end
 
           if element.visible?

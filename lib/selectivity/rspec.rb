@@ -41,7 +41,7 @@ module Selectivity
         unless lable.nil?
           find(:div, "##{label[:for]}", options)
         else
-          first(:xpath, ".//div[contains(., '#{from}')]", options)
+          first(:xpath, ".//div[contains(., '#{from}')]", options).first('.selectivity-input')
         end
       end
 

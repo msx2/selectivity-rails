@@ -254,7 +254,7 @@ Selectivity.OptionListeners.unshift(function(selectivity, options) {
             } else {
                 selectivity.dropdown.showLoading();
 
-                var url = (ajax.url instanceof Function ? ajax.url() : ajax.url);
+                var url = (ajax.url instanceof Function ? ajax.url(queryOptions) : ajax.url);
                 if (params) {
                     url += (url.indexOf('?') > -1 ? '&' : '?') + $.param(params(term, offset));
                 }
@@ -383,10 +383,11 @@ var EventDelegator = _dereq_(2);
  * @param methodName Optional name of a method to call. If omitted, a Selectivity instance is
  *                   created for each element in the set of matched elements. If an element in the
  *                   set already has a Selectivity instance, the result is the same as if the
- *                   setOptions() method is called.
- * @param options Optional options object to pass to the given method or the constructor. See the
- *                documentation for the respective methods to see which options they accept. In case
- *                a new instance is being created, the following property is used:
+ *                   setOptions() method is called. If a method name is given, the options
+ *                   parameter is ignored and any additional parameters are passed to the given
+ *                   method.
+ * @param options Options object to pass to the constructor or the setOptions() method. In case
+ *                a new instance is being created, the following properties are used:
  *                inputType - The input type to use. Default input types include 'Multiple' and
  *                            'Single', but you can add custom input types to the InputTypes map or
  *                            just specify one here as a function. The default value is 'Single',
@@ -401,6 +402,7 @@ var EventDelegator = _dereq_(2);
 function selectivity(methodName, options) {
     /* jshint validthis: true */
 
+    var methodArgs = Array.prototype.slice.call(arguments, 1);
     var result;
 
     this.each(function() {
@@ -408,13 +410,13 @@ function selectivity(methodName, options) {
 
         if (instance) {
             if ($.type(methodName) !== 'string') {
-                options = methodName;
+                methodArgs = [methodName];
                 methodName = 'setOptions';
             }
 
             if ($.type(instance[methodName]) === 'function') {
                 if (result === undefined) {
-                    result = instance[methodName].call(instance, options);
+                    result = instance[methodName].apply(instance, methodArgs);
                 }
             } else {
                 throw new Error('Unknown method: ' + methodName);
@@ -3102,6 +3104,8 @@ function listener(selectivity, $input) {
                 setTimeout(function() {
                     selectivity.close({ keepFocus: false });
                 }, 1);
+            } else if (event.keyCode === KEY_ENTER) {
+                event.preventDefault(); // don't submit forms on keydown
             }
         }
     }
@@ -3666,7 +3670,7 @@ var callSuper = Selectivity.inherits(MultipleSelectivity, {
 
         if (event.added || event.removed) {
             if (this.dropdown) {
-                this.dropdown.showResults(this.filterResults(this.results), {
+                this.dropdown.showResults(this.filterResults(this.dropdown.results), {
                     hasMore: this.dropdown.hasMore
                 });
             }
@@ -4646,28 +4650,28 @@ function bindTraditionalSelectEvents(selectivity) {
     var $el = selectivity.$el;
 
     $el.on('selectivity-init', function(event, mode) {
+        $el.append(selectivity.template('selectCompliance', {
+            mode: mode,
+            name: $el.attr('data-name')
+        })).removeAttr('data-name');
+    }).on('selectivity-init change', function() {
+        var data = selectivity._data;
+        var $select = $el.find('select');
 
-            $el.append(selectivity.template('selectCompliance', {name: $el.attr('data-name'), mode: mode}))
-              .removeAttr('data-name');
-        })
-        .on('selectivity-init change', function() {
-            var data = selectivity._data;
-            var $select = $el.find('select');
+        if (data instanceof Array) {
+            $select.empty();
 
-            if (data instanceof Array) {
-                $select.empty();
-
-                data.forEach(function(item) {
-                    $select.append(selectivity.template('selectOptionCompliance', item));
-                });
+            data.forEach(function(item) {
+                $select.append(selectivity.template('selectOptionCompliance', item));
+            });
+        } else {
+            if (data) {
+                $select.html(selectivity.template('selectOptionCompliance', data));
             } else {
-                if (data) {
-                    $select.html(selectivity.template('selectOptionCompliance', data));
-                } else {
-                    $select.empty();
-                }
+                $select.empty();
             }
-        });
+        }
+    });
 }
 
 /**

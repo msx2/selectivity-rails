@@ -38,7 +38,7 @@ module Selectivity
 
       def find_selectivity_input(from, options)
         label = first(:xpath, ".//label[contains(., '#{from}')]", options)
-        unless lable.nil?
+        if label
           find(:div, "##{label[:for]}", options)
         else
           first(:xpath, ".//div[contains(., '#{from}')]", options).first('.selectivity-input')

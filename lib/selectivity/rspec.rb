@@ -37,11 +37,12 @@ module Selectivity
       private
 
       def find_selectivity_input(from, options)
-        find(:div, from, options)
-      rescue Capybara::ElementNotFound
-        label = find('label', { text: from }.merge(options))
-
-        find(:div, "##{label[:for]}", options)
+        label = first(:xpath, ".//label[contains(., '#{from}')]", options)
+        if label
+          find(:div, "##{label[:for]}", options)
+        else
+          first(:xpath, ".//div[contains(., '#{from}')]", options).first('.selectivity-input')
+        end
       end
 
       def _selectivity_multiselect?(input)

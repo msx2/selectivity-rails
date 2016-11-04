@@ -34,12 +34,6 @@ input[type='text'].selectivity-multiple-input
 .selectivity-multiple-input::-ms-clear
     display: none
 
-.selectivity-multiple-input.selectivity-width-detector
-    position: absolute
-    top: -10000px
-    left: 0
-    white-space: pre
-
 .selectivity-multiple-selected-item
     background: $selectivity-multiple-selected-bg
     border-radius: $selectivity-multiple-selected-border-radius
@@ -48,7 +42,7 @@ input[type='text'].selectivity-multiple-input
     float: left
     line-height: 2em
     margin: 2px
-    padding-right: 5px
+    padding: 0 5px
     position: relative
     -moz-user-select: none
     -ms-user-select: none
@@ -62,4 +56,5 @@ input[type='text'].selectivity-multiple-input
 .selectivity-multiple-selected-item-remove
     color: $selectivity-multiple-selected-color
     cursor: pointer
+    margin-left: -5px
     padding: 5px

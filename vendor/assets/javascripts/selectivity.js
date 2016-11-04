@@ -1,41 +1,106 @@
 /**
  * @license
- * Selectivity.js 2.1.0 <https://arendjr.github.io/selectivity/>
+ * Selectivity.js 3.0.0 <https://arendjr.github.io/selectivity/>
  * Copyright (c) 2014-2016 Arend van Beelen jr.
  *           (c) 2016 Speakap BV
  * Available under MIT license <https://github.com/arendjr/selectivity/blob/master/LICENSE>
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.selectivity = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var root = _dereq_(4);
+var root = _dereq_(7);
 
 /** Built-in value references. */
 var Symbol = root.Symbol;
 
 module.exports = Symbol;
 
-},{"4":4}],2:[function(_dereq_,module,exports){
+},{"7":7}],2:[function(_dereq_,module,exports){
 /**
- * Checks if `value` is a global object.
+ * A specialized version of `_.map` for arrays without support for iteratee
+ * shorthands.
  *
  * @private
- * @param {*} value The value to check.
- * @returns {null|Object} Returns `value` if it's a global object, else `null`.
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns the new mapped array.
  */
-function checkGlobal(value) {
-  return (value && value.Object === Object) ? value : null;
+function arrayMap(array, iteratee) {
+  var index = -1,
+      length = array ? array.length : 0,
+      result = Array(length);
+
+  while (++index < length) {
+    result[index] = iteratee(array[index], index, array);
+  }
+  return result;
 }
 
-module.exports = checkGlobal;
+module.exports = arrayMap;
 
 },{}],3:[function(_dereq_,module,exports){
+/**
+ * The base implementation of `_.propertyOf` without support for deep paths.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {Function} Returns the new accessor function.
+ */
+function basePropertyOf(object) {
+  return function(key) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+module.exports = basePropertyOf;
+
+},{}],4:[function(_dereq_,module,exports){
+var Symbol = _dereq_(1),
+    arrayMap = _dereq_(2),
+    isArray = _dereq_(10),
+    isSymbol = _dereq_(14);
+
+/** Used as references for various `Number` constants. */
+var INFINITY = 1 / 0;
+
+/** Used to convert symbols to primitives and strings. */
+var symbolProto = Symbol ? Symbol.prototype : undefined,
+    symbolToString = symbolProto ? symbolProto.toString : undefined;
+
+/**
+ * The base implementation of `_.toString` which doesn't convert nullish
+ * values to empty strings.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {string} Returns the string.
+ */
+function baseToString(value) {
+  // Exit early for strings to avoid a performance hit in some environments.
+  if (typeof value == 'string') {
+    return value;
+  }
+  if (isArray(value)) {
+    // Recursively convert values (susceptible to call stack limits).
+    return arrayMap(value, baseToString) + '';
+  }
+  if (isSymbol(value)) {
+    return symbolToString ? symbolToString.call(value) : '';
+  }
+  var result = (value + '');
+  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+}
+
+module.exports = baseToString;
+
+},{"1":1,"10":10,"14":14,"2":2}],5:[function(_dereq_,module,exports){
+var basePropertyOf = _dereq_(3);
+
 /** Used to map characters to HTML entities. */
 var htmlEscapes = {
   '&': '&amp;',
   '<': '&lt;',
   '>': '&gt;',
   '"': '&quot;',
-  "'": '&#39;',
-  '`': '&#96;'
+  "'": '&#39;'
 };
 
 /**
@@ -45,97 +110,75 @@ var htmlEscapes = {
  * @param {string} chr The matched character to escape.
  * @returns {string} Returns the escaped character.
  */
-function escapeHtmlChar(chr) {
-  return htmlEscapes[chr];
-}
+var escapeHtmlChar = basePropertyOf(htmlEscapes);
 
 module.exports = escapeHtmlChar;
 
-},{}],4:[function(_dereq_,module,exports){
+},{"3":3}],6:[function(_dereq_,module,exports){
 (function (global){
-var checkGlobal = _dereq_(2);
-
-/** Used to determine if values are of the language type `Object`. */
-var objectTypes = {
-  'function': true,
-  'object': true
-};
-
-/** Detect free variable `exports`. */
-var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType)
-  ? exports
-  : undefined;
-
-/** Detect free variable `module`. */
-var freeModule = (objectTypes[typeof module] && module && !module.nodeType)
-  ? module
-  : undefined;
-
 /** Detect free variable `global` from Node.js. */
-var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+
+module.exports = freeGlobal;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],7:[function(_dereq_,module,exports){
+var freeGlobal = _dereq_(6);
 
 /** Detect free variable `self`. */
-var freeSelf = checkGlobal(objectTypes[typeof self] && self);
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
 
-/** Detect free variable `window`. */
-var freeWindow = checkGlobal(objectTypes[typeof window] && window);
-
-/** Detect `this` as the global object. */
-var thisGlobal = checkGlobal(objectTypes[typeof this] && this);
-
-/**
- * Used as a reference to the global object.
- *
- * The `this` value is used if it's the global object to avoid Greasemonkey's
- * restricted `window` object, otherwise the `window` object is used.
- */
-var root = freeGlobal ||
-  ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) ||
-    freeSelf || thisGlobal || Function('return this')();
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
 
 module.exports = root;
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"2":2}],5:[function(_dereq_,module,exports){
-var isObject = _dereq_(8),
-    now = _dereq_(11),
-    toNumber = _dereq_(12);
+},{"6":6}],8:[function(_dereq_,module,exports){
+var isObject = _dereq_(11),
+    now = _dereq_(15),
+    toNumber = _dereq_(16);
 
-/** Used as the `TypeError` message for "Functions" methods. */
+/** Error message constants. */
 var FUNC_ERROR_TEXT = 'Expected a function';
 
 /* Built-in method references for those with the same name as other `lodash` methods. */
-var nativeMax = Math.max;
+var nativeMax = Math.max,
+    nativeMin = Math.min;
 
 /**
  * Creates a debounced function that delays invoking `func` until after `wait`
  * milliseconds have elapsed since the last time the debounced function was
  * invoked. The debounced function comes with a `cancel` method to cancel
  * delayed `func` invocations and a `flush` method to immediately invoke them.
- * Provide an options object to indicate whether `func` should be invoked on
- * the leading and/or trailing edge of the `wait` timeout. The `func` is invoked
- * with the last arguments provided to the debounced function. Subsequent calls
- * to the debounced function return the result of the last `func` invocation.
+ * Provide `options` to indicate whether `func` should be invoked on the
+ * leading and/or trailing edge of the `wait` timeout. The `func` is invoked
+ * with the last arguments provided to the debounced function. Subsequent
+ * calls to the debounced function return the result of the last `func`
+ * invocation.
  *
- * **Note:** If `leading` and `trailing` options are `true`, `func` is invoked
- * on the trailing edge of the timeout only if the debounced function is
- * invoked more than once during the `wait` timeout.
+ * **Note:** If `leading` and `trailing` options are `true`, `func` is
+ * invoked on the trailing edge of the timeout only if the debounced function
+ * is invoked more than once during the `wait` timeout.
  *
- * See [David Corbacho's article](http://drupalmotion.com/article/debounce-and-throttle-visual-explanation)
+ * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
+ * until to the next tick, similar to `setTimeout` with a timeout of `0`.
+ *
+ * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
  * for details over the differences between `_.debounce` and `_.throttle`.
  *
  * @static
  * @memberOf _
+ * @since 0.1.0
  * @category Function
  * @param {Function} func The function to debounce.
  * @param {number} [wait=0] The number of milliseconds to delay.
- * @param {Object} [options] The options object.
- * @param {boolean} [options.leading=false] Specify invoking on the leading
- *  edge of the timeout.
- * @param {number} [options.maxWait] The maximum time `func` is allowed to be
- *  delayed before it's invoked.
- * @param {boolean} [options.trailing=true] Specify invoking on the trailing
- *  edge of the timeout.
+ * @param {Object} [options={}] The options object.
+ * @param {boolean} [options.leading=false]
+ *  Specify invoking on the leading edge of the timeout.
+ * @param {number} [options.maxWait]
+ *  The maximum time `func` is allowed to be delayed before it's invoked.
+ * @param {boolean} [options.trailing=true]
+ *  Specify invoking on the trailing edge of the timeout.
  * @returns {Function} Returns the new debounced function.
  * @example
  *
@@ -157,16 +200,15 @@ var nativeMax = Math.max;
  * jQuery(window).on('popstate', debounced.cancel);
  */
 function debounce(func, wait, options) {
-  var args,
-      maxTimeoutId,
+  var lastArgs,
+      lastThis,
+      maxWait,
       result,
-      stamp,
-      thisArg,
-      timeoutId,
-      trailingCall,
-      lastCalled = 0,
+      timerId,
+      lastCallTime,
+      lastInvokeTime = 0,
       leading = false,
-      maxWait = false,
+      maxing = false,
       trailing = true;
 
   if (typeof func != 'function') {
@@ -175,96 +217,102 @@ function debounce(func, wait, options) {
   wait = toNumber(wait) || 0;
   if (isObject(options)) {
     leading = !!options.leading;
-    maxWait = 'maxWait' in options && nativeMax(toNumber(options.maxWait) || 0, wait);
+    maxing = 'maxWait' in options;
+    maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
     trailing = 'trailing' in options ? !!options.trailing : trailing;
   }
 
-  function cancel() {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    if (maxTimeoutId) {
-      clearTimeout(maxTimeoutId);
-    }
-    lastCalled = 0;
-    args = maxTimeoutId = thisArg = timeoutId = trailingCall = undefined;
-  }
+  function invokeFunc(time) {
+    var args = lastArgs,
+        thisArg = lastThis;
 
-  function complete(isCalled, id) {
-    if (id) {
-      clearTimeout(id);
-    }
-    maxTimeoutId = timeoutId = trailingCall = undefined;
-    if (isCalled) {
-      lastCalled = now();
-      result = func.apply(thisArg, args);
-      if (!timeoutId && !maxTimeoutId) {
-        args = thisArg = undefined;
-      }
-    }
-  }
-
-  function delayed() {
-    var remaining = wait - (now() - stamp);
-    if (remaining <= 0 || remaining > wait) {
-      complete(trailingCall, maxTimeoutId);
-    } else {
-      timeoutId = setTimeout(delayed, remaining);
-    }
-  }
-
-  function flush() {
-    if ((timeoutId && trailingCall) || (maxTimeoutId && trailing)) {
-      result = func.apply(thisArg, args);
-    }
-    cancel();
+    lastArgs = lastThis = undefined;
+    lastInvokeTime = time;
+    result = func.apply(thisArg, args);
     return result;
   }
 
-  function maxDelayed() {
-    complete(trailing, timeoutId);
+  function leadingEdge(time) {
+    // Reset any `maxWait` timer.
+    lastInvokeTime = time;
+    // Start the timer for the trailing edge.
+    timerId = setTimeout(timerExpired, wait);
+    // Invoke the leading edge.
+    return leading ? invokeFunc(time) : result;
+  }
+
+  function remainingWait(time) {
+    var timeSinceLastCall = time - lastCallTime,
+        timeSinceLastInvoke = time - lastInvokeTime,
+        result = wait - timeSinceLastCall;
+
+    return maxing ? nativeMin(result, maxWait - timeSinceLastInvoke) : result;
+  }
+
+  function shouldInvoke(time) {
+    var timeSinceLastCall = time - lastCallTime,
+        timeSinceLastInvoke = time - lastInvokeTime;
+
+    // Either this is the first call, activity has stopped and we're at the
+    // trailing edge, the system time has gone backwards and we're treating
+    // it as the trailing edge, or we've hit the `maxWait` limit.
+    return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
+      (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
+  }
+
+  function timerExpired() {
+    var time = now();
+    if (shouldInvoke(time)) {
+      return trailingEdge(time);
+    }
+    // Restart the timer.
+    timerId = setTimeout(timerExpired, remainingWait(time));
+  }
+
+  function trailingEdge(time) {
+    timerId = undefined;
+
+    // Only invoke if we have `lastArgs` which means `func` has been
+    // debounced at least once.
+    if (trailing && lastArgs) {
+      return invokeFunc(time);
+    }
+    lastArgs = lastThis = undefined;
+    return result;
+  }
+
+  function cancel() {
+    if (timerId !== undefined) {
+      clearTimeout(timerId);
+    }
+    lastInvokeTime = 0;
+    lastArgs = lastCallTime = lastThis = timerId = undefined;
+  }
+
+  function flush() {
+    return timerId === undefined ? result : trailingEdge(now());
   }
 
   function debounced() {
-    args = arguments;
-    stamp = now();
-    thisArg = this;
-    trailingCall = trailing && (timeoutId || !leading);
+    var time = now(),
+        isInvoking = shouldInvoke(time);
 
-    if (maxWait === false) {
-      var leadingCall = leading && !timeoutId;
-    } else {
-      if (!lastCalled && !maxTimeoutId && !leading) {
-        lastCalled = stamp;
+    lastArgs = arguments;
+    lastThis = this;
+    lastCallTime = time;
+
+    if (isInvoking) {
+      if (timerId === undefined) {
+        return leadingEdge(lastCallTime);
       }
-      var remaining = maxWait - (stamp - lastCalled);
-
-      var isCalled = (remaining <= 0 || remaining > maxWait) &&
-        (leading || maxTimeoutId);
-
-      if (isCalled) {
-        if (maxTimeoutId) {
-          maxTimeoutId = clearTimeout(maxTimeoutId);
-        }
-        lastCalled = stamp;
-        result = func.apply(thisArg, args);
-      }
-      else if (!maxTimeoutId) {
-        maxTimeoutId = setTimeout(maxDelayed, remaining);
+      if (maxing) {
+        // Handle invocations in a tight loop.
+        timerId = setTimeout(timerExpired, wait);
+        return invokeFunc(lastCallTime);
       }
     }
-    if (isCalled && timeoutId) {
-      timeoutId = clearTimeout(timeoutId);
-    }
-    else if (!timeoutId && wait !== maxWait) {
-      timeoutId = setTimeout(delayed, wait);
-    }
-    if (leadingCall) {
-      isCalled = true;
-      result = func.apply(thisArg, args);
-    }
-    if (isCalled && !timeoutId && !maxTimeoutId) {
-      args = thisArg = undefined;
+    if (timerId === undefined) {
+      timerId = setTimeout(timerExpired, wait);
     }
     return result;
   }
@@ -275,37 +323,33 @@ function debounce(func, wait, options) {
 
 module.exports = debounce;
 
-},{"11":11,"12":12,"8":8}],6:[function(_dereq_,module,exports){
-var escapeHtmlChar = _dereq_(3),
-    toString = _dereq_(13);
+},{"11":11,"15":15,"16":16}],9:[function(_dereq_,module,exports){
+var escapeHtmlChar = _dereq_(5),
+    toString = _dereq_(17);
 
 /** Used to match HTML entities and HTML characters. */
-var reUnescapedHtml = /[&<>"'`]/g,
+var reUnescapedHtml = /[&<>"']/g,
     reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
 
 /**
- * Converts the characters "&", "<", ">", '"', "'", and "\`" in `string` to
- * their corresponding HTML entities.
+ * Converts the characters "&", "<", ">", '"', and "'" in `string` to their
+ * corresponding HTML entities.
  *
  * **Note:** No other characters are escaped. To escape additional
  * characters use a third-party library like [_he_](https://mths.be/he).
  *
  * Though the ">" character is escaped for symmetry, characters like
  * ">" and "/" don't need escaping in HTML and have no special meaning
- * unless they're part of a tag or unquoted attribute value.
- * See [Mathias Bynens's article](https://mathiasbynens.be/notes/ambiguous-ampersands)
+ * unless they're part of a tag or unquoted attribute value. See
+ * [Mathias Bynens's article](https://mathiasbynens.be/notes/ambiguous-ampersands)
  * (under "semi-related fun fact") for more details.
  *
- * Backticks are escaped because in IE < 9, they can break out of
- * attribute values or HTML comments. See [#59](https://html5sec.org/#59),
- * [#102](https://html5sec.org/#102), [#108](https://html5sec.org/#108), and
- * [#133](https://html5sec.org/#133) of the [HTML5 Security Cheatsheet](https://html5sec.org/)
- * for more details.
- *
- * When working with HTML you should always [quote attribute values](http://wonko.com/post/html-escaping)
- * to reduce XSS vectors.
+ * When working with HTML you should always
+ * [quote attribute values](http://wonko.com/post/html-escaping) to reduce
+ * XSS vectors.
  *
  * @static
+ * @since 0.1.0
  * @memberOf _
  * @category String
  * @param {string} [string=''] The string to escape.
@@ -324,55 +368,43 @@ function escape(string) {
 
 module.exports = escape;
 
-},{"13":13,"3":3}],7:[function(_dereq_,module,exports){
-var isObject = _dereq_(8);
-
-/** `Object#toString` result references. */
-var funcTag = '[object Function]',
-    genTag = '[object GeneratorFunction]';
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
+},{"17":17,"5":5}],10:[function(_dereq_,module,exports){
 /**
- * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objectToString = objectProto.toString;
-
-/**
- * Checks if `value` is classified as a `Function` object.
+ * Checks if `value` is classified as an `Array` object.
  *
  * @static
  * @memberOf _
+ * @since 0.1.0
  * @category Lang
  * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @returns {boolean} Returns `true` if `value` is an array, else `false`.
  * @example
  *
- * _.isFunction(_);
+ * _.isArray([1, 2, 3]);
  * // => true
  *
- * _.isFunction(/abc/);
+ * _.isArray(document.body.children);
+ * // => false
+ *
+ * _.isArray('abc');
+ * // => false
+ *
+ * _.isArray(_.noop);
  * // => false
  */
-function isFunction(value) {
-  // The use of `Object#toString` avoids issues with the `typeof` operator
-  // in Safari 8 which returns 'object' for typed array and weak map constructors,
-  // and PhantomJS 1.9 which returns 'function' for `NodeList` instances.
-  var tag = isObject(value) ? objectToString.call(value) : '';
-  return tag == funcTag || tag == genTag;
-}
+var isArray = Array.isArray;
 
-module.exports = isFunction;
+module.exports = isArray;
 
-},{"8":8}],8:[function(_dereq_,module,exports){
+},{}],11:[function(_dereq_,module,exports){
 /**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
  *
  * @static
  * @memberOf _
+ * @since 0.1.0
  * @category Lang
  * @param {*} value The value to check.
  * @returns {boolean} Returns `true` if `value` is an object, else `false`.
@@ -392,18 +424,19 @@ module.exports = isFunction;
  */
 function isObject(value) {
   var type = typeof value;
-  return !!value && (type == 'object' || type == 'function');
+  return value != null && (type == 'object' || type == 'function');
 }
 
 module.exports = isObject;
 
-},{}],9:[function(_dereq_,module,exports){
+},{}],12:[function(_dereq_,module,exports){
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
  *
  * @static
  * @memberOf _
+ * @since 4.0.0
  * @category Lang
  * @param {*} value The value to check.
  * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
@@ -422,13 +455,54 @@ module.exports = isObject;
  * // => false
  */
 function isObjectLike(value) {
-  return !!value && typeof value == 'object';
+  return value != null && typeof value == 'object';
 }
 
 module.exports = isObjectLike;
 
-},{}],10:[function(_dereq_,module,exports){
-var isObjectLike = _dereq_(9);
+},{}],13:[function(_dereq_,module,exports){
+var isArray = _dereq_(10),
+    isObjectLike = _dereq_(12);
+
+/** `Object#toString` result references. */
+var stringTag = '[object String]';
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/**
+ * Checks if `value` is classified as a `String` primitive or object.
+ *
+ * @static
+ * @since 0.1.0
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a string, else `false`.
+ * @example
+ *
+ * _.isString('abc');
+ * // => true
+ *
+ * _.isString(1);
+ * // => false
+ */
+function isString(value) {
+  return typeof value == 'string' ||
+    (!isArray(value) && isObjectLike(value) && objectToString.call(value) == stringTag);
+}
+
+module.exports = isString;
+
+},{"10":10,"12":12}],14:[function(_dereq_,module,exports){
+var isObjectLike = _dereq_(12);
 
 /** `Object#toString` result references. */
 var symbolTag = '[object Symbol]';
@@ -437,7 +511,8 @@ var symbolTag = '[object Symbol]';
 var objectProto = Object.prototype;
 
 /**
- * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
  * of values.
  */
 var objectToString = objectProto.toString;
@@ -447,9 +522,10 @@ var objectToString = objectProto.toString;
  *
  * @static
  * @memberOf _
+ * @since 4.0.0
  * @category Lang
  * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
  * @example
  *
  * _.isSymbol(Symbol.iterator);
@@ -465,14 +541,16 @@ function isSymbol(value) {
 
 module.exports = isSymbol;
 
-},{"9":9}],11:[function(_dereq_,module,exports){
+},{"12":12}],15:[function(_dereq_,module,exports){
+var root = _dereq_(7);
+
 /**
  * Gets the timestamp of the number of milliseconds that have elapsed since
  * the Unix epoch (1 January 1970 00:00:00 UTC).
  *
  * @static
  * @memberOf _
- * @type {Function}
+ * @since 2.4.0
  * @category Date
  * @returns {number} Returns the timestamp.
  * @example
@@ -480,15 +558,17 @@ module.exports = isSymbol;
  * _.defer(function(stamp) {
  *   console.log(_.now() - stamp);
  * }, _.now());
- * // => logs the number of milliseconds it took for the deferred function to be invoked
+ * // => Logs the number of milliseconds it took for the deferred invocation.
  */
-var now = Date.now;
+var now = function() {
+  return root.Date.now();
+};
 
 module.exports = now;
 
-},{}],12:[function(_dereq_,module,exports){
-var isFunction = _dereq_(7),
-    isObject = _dereq_(8);
+},{"7":7}],16:[function(_dereq_,module,exports){
+var isObject = _dereq_(11),
+    isSymbol = _dereq_(14);
 
 /** Used as references for various `Number` constants. */
 var NAN = 0 / 0;
@@ -513,13 +593,14 @@ var freeParseInt = parseInt;
  *
  * @static
  * @memberOf _
+ * @since 4.0.0
  * @category Lang
  * @param {*} value The value to process.
  * @returns {number} Returns the number.
  * @example
  *
- * _.toNumber(3);
- * // => 3
+ * _.toNumber(3.2);
+ * // => 3.2
  *
  * _.toNumber(Number.MIN_VALUE);
  * // => 5e-324
@@ -527,12 +608,18 @@ var freeParseInt = parseInt;
  * _.toNumber(Infinity);
  * // => Infinity
  *
- * _.toNumber('3');
- * // => 3
+ * _.toNumber('3.2');
+ * // => 3.2
  */
 function toNumber(value) {
+  if (typeof value == 'number') {
+    return value;
+  }
+  if (isSymbol(value)) {
+    return NAN;
+  }
   if (isObject(value)) {
-    var other = isFunction(value.valueOf) ? value.valueOf() : value;
+    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
     value = isObject(other) ? (other + '') : other;
   }
   if (typeof value != 'string') {
@@ -547,26 +634,19 @@ function toNumber(value) {
 
 module.exports = toNumber;
 
-},{"7":7,"8":8}],13:[function(_dereq_,module,exports){
-var Symbol = _dereq_(1),
-    isSymbol = _dereq_(10);
-
-/** Used as references for various `Number` constants. */
-var INFINITY = 1 / 0;
-
-/** Used to convert symbols to primitives and strings. */
-var symbolProto = Symbol ? Symbol.prototype : undefined,
-    symbolToString = symbolProto ? symbolProto.toString : undefined;
+},{"11":11,"14":14}],17:[function(_dereq_,module,exports){
+var baseToString = _dereq_(4);
 
 /**
- * Converts `value` to a string if it's not one. An empty string is returned
- * for `null` and `undefined` values. The sign of `-0` is preserved.
+ * Converts `value` to a string. An empty string is returned for `null`
+ * and `undefined` values. The sign of `-0` is preserved.
  *
  * @static
  * @memberOf _
+ * @since 4.0.0
  * @category Lang
- * @param {*} value The value to process.
- * @returns {string} Returns the string.
+ * @param {*} value The value to convert.
+ * @returns {string} Returns the converted string.
  * @example
  *
  * _.toString(null);
@@ -579,104 +659,1876 @@ var symbolProto = Symbol ? Symbol.prototype : undefined,
  * // => '1,2,3'
  */
 function toString(value) {
-  // Exit early for strings to avoid a performance hit in some environments.
-  if (typeof value == 'string') {
-    return value;
-  }
-  if (value == null) {
-    return '';
-  }
-  if (isSymbol(value)) {
-    return symbolToString ? symbolToString.call(value) : '';
-  }
-  var result = (value + '');
-  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+  return value == null ? '' : baseToString(value);
 }
 
 module.exports = toString;
 
-},{"1":1,"10":10}],14:[function(_dereq_,module,exports){
+},{"4":4}],18:[function(_dereq_,module,exports){
 'use strict';
 
-var $ = window.jQuery || window.Zepto;
+var $ = (window.jQuery || window.Zepto);
+var isString = _dereq_(13);
+
+var Selectivity = _dereq_(35);
+
+var EVENT_PROPERTIES = {
+    'change': ['added', 'removed', 'value'],
+    'selectivity-change': ['added', 'removed', 'value'],
+    'selectivity-highlight': ['id', 'item'],
+    'selectivity-selected': ['id', 'item'],
+    'selectivity-selecting': ['id', 'item']
+};
+
+// create event listeners that will copy the custom properties from the native events
+// to the jQuery events, so jQuery users can use them seamlessly
+function patchEvents($el) {
+
+    $.each(EVENT_PROPERTIES, function(eventName, properties) {
+        $el.on(eventName, function(event) {
+            if (event.originalEvent) {
+                properties.forEach(function(propertyName) {
+                    event[propertyName] = event.originalEvent[propertyName];
+                });
+            }
+        });
+    });
+}
 
 /**
- * Event Delegator Constructor.
+ * Create a new Selectivity instance or invoke a method on an instance.
+ *
+ * @param methodName Optional name of a method to call. If omitted, a Selectivity instance is
+ *                   created for each element in the set of matched elements. If an element in the
+ *                   set already has a Selectivity instance, the result is the same as if the
+ *                   setOptions() method is called. If a method name is given, the options
+ *                   parameter is ignored and any additional parameters are passed to the given
+ *                   method.
+ * @param options Options object to pass to the constructor or the setOptions() method. In case
+ *                a new instance is being created, the following properties are used:
+ *                inputType - The input type to use. Default inputs include 'Multiple' and 'Single',
+ *                            but you can add custom inputs to the Selectivity.Inputs map or just
+ *                            specify one here as a function. The default value is 'Multiple' if
+ *                            `multiple` is true and 'Single' otherwise.
+ *                multiple - Boolean determining whether multiple items may be selected
+ *                           (default: false). If true, the default `inputType` is set to
+ *                           'Multiple'.
+ *
+ * @return If the given method returns a value, this method returns the value of that method
+ *         executed on the first element in the set of matched elements.
  */
-function EventDelegator() {
+$.fn.selectivity = function selectivity(methodName, options) {
 
-    this._events = [];
+    var methodArgs = Array.prototype.slice.call(arguments, 1);
+    var result;
 
-    this.delegateEvents();
+    this.each(function() {
+        var instance = this.selectivity;
+
+        if (instance) {
+            if (methodName === 'data') {
+                methodName = (methodArgs.length ? 'setData' : 'getData');
+            } else if (methodName === 'val' || methodName === 'value') {
+                methodName = (methodArgs.length ? 'setValue' : 'getValue');
+            } else if (!isString(methodName)) {
+                methodArgs = [methodName];
+                methodName = 'setOptions';
+            }
+
+            if ($.isFunction(instance[methodName])) {
+                if (result === undefined) {
+                    result = instance[methodName].apply(instance, methodArgs);
+                }
+            } else {
+                throw new Error('Unknown method: ' + methodName);
+            }
+        } else if (isString(methodName)) {
+            if (methodName !== 'destroy') {
+                throw new Error('Cannot call method on element without Selectivity instance');
+            }
+        } else {
+            options = $.extend({}, methodName, { element: this });
+
+            // this is a one-time hack to facilitate the "traditional" plugin, because
+            // the plugin is not able to hook this early into creation of the instance
+            var $this = $(this);
+            if ($this.is('select') && $this.prop('multiple')) {
+                options.multiple = true;
+            }
+
+            var Inputs = Selectivity.Inputs;
+            var InputType = (options.inputType || (options.multiple ? 'Multiple' : 'Single'));
+            if (!$.isFunction(InputType)) {
+                if (Inputs[InputType]) {
+                    InputType = Inputs[InputType];
+                } else {
+                    throw new Error('Unknown Selectivity input type: ' + InputType);
+                }
+            }
+
+            this.selectivity = new InputType(options);
+            $this = $(this.selectivity.el);
+
+            patchEvents($this);
+
+            if (result === undefined) {
+                result = $this;
+            }
+        }
+    });
+
+    return (result === undefined ? this : result);
+};
+
+Selectivity.patchEvents = patchEvents;
+
+},{"13":13,"35":35,"jquery":"jquery"}],19:[function(_dereq_,module,exports){
+'use strict';
+
+var extend = (window.jQuery || window.Zepto).extend;
+
+var EventListener = _dereq_(20);
+var getItemSelector = _dereq_(38);
+var matchesSelector = _dereq_(40);
+var parseElement = _dereq_(41);
+var removeElement = _dereq_(42);
+var stopPropagation = _dereq_(43);
+var toggleClass = _dereq_(44);
+
+var Selectivity = _dereq_(35);
+
+var HIGHLIGHT_CLASS = 'highlight';
+var HIGHLIGHT_SELECTOR = '.' + HIGHLIGHT_CLASS;
+var LOAD_MORE_SELECTOR = '.selectivity-load-more';
+var RESULT_ITEM_SELECTOR = '.selectivity-result-item';
+
+var SCROLL_EVENTS = ['scroll', 'touchend', 'touchmove'];
+
+function findClosestElementMatchingSelector(el, selector) {
+
+    while (el && !matchesSelector(el, selector)) {
+        el = el.parentElement;
+    }
+    return el || null;
+}
+
+/**
+ * Selectivity Dropdown Constructor.
+ *
+ * @param selectivity Selectivity instance to which the dropdown belongs.
+ * @param options Options object. Should have the following properties:
+ *                highlightFirstItem - Set to false if you don't want the first item to be
+ *                                     automatically highlighted (optional).
+ *                items - Array of items to display.
+ *                position - Callback for positioning the dropdown.
+ *                query - Callback to fetch the items to display.
+ *                showSearchInput - Boolean whether a search input should be shown.
+ */
+function SelectivityDropdown(selectivity, options) {
+
+    this.el = parseElement(selectivity.template('dropdown', {
+        dropdownCssClass: selectivity.options.dropdownCssClass,
+        searchInputPlaceholder: selectivity.options.searchInputPlaceholder,
+        showSearchInput: options.showSearchInput
+    }));
+
+    /**
+     * DOM element to add the results to.
+     */
+    this.resultsContainer = this.$('.selectivity-results-container');
+
+    /**
+     * Boolean indicating whether more results are available than currently displayed in the
+     * dropdown.
+     */
+    this.hasMore = false;
+
+    /**
+     * The currently highlighted result item.
+     */
+    this.highlightedResult = null;
+
+    /**
+     * Boolean whether the load more link is currently highlighted.
+     */
+    this.loadMoreHighlighted = false;
+
+    /**
+     * Options passed to the dropdown constructor.
+     */
+    this.options = options;
+
+    /**
+     * The results displayed in the dropdown.
+     */
+    this.results = [];
+
+    /**
+     * Selectivity instance.
+     */
+    this.selectivity = selectivity;
+
+    this._closed = false;
+    this._lastMousePosition = {};
+
+    this.close = this.close.bind(this);
+    this.position = this.position.bind(this);
+
+    if (selectivity.options.closeOnSelect !== false) {
+        selectivity.events.on('selectivity-selecting', this.close);
+    }
+
+    this.addToDom();
+    this.showLoading();
+
+    if (options.showSearchInput) {
+        selectivity.initInput(this.$('.selectivity-search-input'));
+        selectivity.focus();
+    }
+
+    var events = {};
+    events['click ' + LOAD_MORE_SELECTOR] = this._loadMoreClicked;
+    events['click ' + RESULT_ITEM_SELECTOR] = this._resultClicked;
+    events['mouseenter ' + LOAD_MORE_SELECTOR] = this._loadMoreHovered;
+    events['mouseenter ' + RESULT_ITEM_SELECTOR] = this._resultHovered;
+
+    this.events = new EventListener(this.el, this);
+    this.events.on(events);
+
+    this._attachScrollListeners();
+    this._suppressWheel();
+
+    setTimeout(this.triggerOpen.bind(this), 1);
 }
 
 /**
  * Methods.
  */
-$.extend(EventDelegator.prototype, {
+extend(SelectivityDropdown.prototype, {
 
     /**
-     * Attaches all listeners from the events map to the instance's element.
-     *
-     * Normally, you should not have to call this method yourself as it's called automatically in
-     * the constructor.
+     * Convenience shortcut for this.el.querySelector(selector).
      */
-    delegateEvents: function() {
+    $: function(selector) {
 
-        this.undelegateEvents();
-
-        $.each(this.events, function(event, listener) {
-            var selector, index = event.indexOf(' ');
-            if (index > -1) {
-                selector = event.slice(index + 1);
-                event = event.slice(0, index);
-            }
-
-            if ($.type(listener) === 'string') {
-                listener = this[listener];
-            }
-
-            listener = listener.bind(this);
-
-            if (selector) {
-                this.$el.on(event, selector, listener);
-            } else {
-                this.$el.on(event, listener);
-            }
-
-            this._events.push({ event: event, selector: selector, listener: listener });
-        }.bind(this));
+        return this.el.querySelector(selector);
     },
 
     /**
-     * Detaches all listeners from the events map from the instance's element.
+     * Adds the dropdown to the DOM.
      */
-    undelegateEvents: function() {
+    addToDom: function() {
 
-        this._events.forEach(function(event) {
-            if (event.selector) {
-                this.$el.off(event.event, event.selector, event.listener);
-            } else {
-                this.$el.off(event.event, event.listener);
+        this.selectivity.el.appendChild(this.el);
+    },
+
+    /**
+     * Closes the dropdown.
+     */
+    close: function() {
+
+        if (!this._closed) {
+            this._closed = true;
+
+            removeElement(this.el);
+
+            this.selectivity.events.off('selectivity-selecting', this.close);
+
+            this.triggerClose();
+
+            this._removeScrollListeners();
+        }
+    },
+
+    /**
+     * Highlights a result item.
+     *
+     * @param item The item to highlight.
+     * @param options Optional options object that may contain the following property:
+     *                reason - The reason why the result item is being highlighted. Possible
+     *                         values: 'current_value', 'first_result', 'hovered'.
+     */
+    highlight: function(item, options) {
+
+        toggleClass(this.$(HIGHLIGHT_SELECTOR), HIGHLIGHT_CLASS, false);
+        toggleClass(this.$(getItemSelector(RESULT_ITEM_SELECTOR, item.id)), HIGHLIGHT_CLASS, true);
+
+        this.highlightedResult = item;
+        this.loadMoreHighlighted = false;
+
+        this.selectivity.triggerEvent('selectivity-highlight', {
+            item: item,
+            id: item.id,
+            reason: options && options.reason || 'unspecified'
+        });
+    },
+
+    /**
+     * Highlights the load more link.
+     *
+     * @param item The item to highlight.
+     */
+    highlightLoadMore: function() {
+
+        toggleClass(this.$(HIGHLIGHT_SELECTOR), HIGHLIGHT_CLASS, false);
+        toggleClass(this.$(LOAD_MORE_SELECTOR), HIGHLIGHT_CLASS, true);
+
+        this.highlightedResult = null;
+        this.loadMoreHighlighted = true;
+    },
+
+    /**
+     * Loads a follow-up page with results after a search.
+     *
+     * This method should only be called after a call to search() when the callback has indicated
+     * more results are available.
+     */
+    loadMore: function() {
+
+        removeElement(this.$(LOAD_MORE_SELECTOR));
+        this.resultsContainer.innerHTML += this.selectivity.template('loading');
+
+        this.options.query({
+            callback: function(response) {
+                if (response && response.results) {
+                    this._showResults(
+                        Selectivity.processItems(response.results),
+                        { add: true, hasMore: !!response.more }
+                    );
+                } else {
+                    throw new Error('callback must be passed a response object');
+                }
+            }.bind(this),
+            error: this._showResults.bind(this, [], { add: true }),
+            offset: this.results.length,
+            selectivity: this.selectivity,
+            term: this.term
+        });
+    },
+
+    /**
+     * Positions the dropdown inside the DOM.
+     */
+    position: function() {
+
+        var position = this.options.position;
+        if (position) {
+            position(this.el, this.selectivity.el);
+        }
+
+        this._scrolled();
+    },
+
+    /**
+     * Renders an array of result items.
+     *
+     * @param items Array of result items.
+     *
+     * @return HTML-formatted string to display the result items.
+     */
+    renderItems: function(items) {
+
+        var selectivity = this.selectivity;
+        return items.map(function(item) {
+            var result = selectivity.template(item.id ? 'resultItem' : 'resultLabel', item);
+            if (item.children) {
+                result += selectivity.template('resultChildren', {
+                    childrenHtml: this.renderItems(item.children)
+                });
             }
-        }, this);
+            return result;
+        }, this).join('');
+    },
 
-        this._events = [];
+    /**
+     * Searches for results based on the term given.
+     *
+     * If an items array has been passed with the options to the Selectivity instance, a local
+     * search will be performed among those items. Otherwise, the query function specified in the
+     * options will be used to perform the search. If neither is defined, nothing happens.
+     *
+     * @param term Term to search for.
+     */
+    search: function(term) {
+
+        this.term = term;
+
+        if (this.options.items) {
+            term = Selectivity.transformText(term);
+            var matcher = this.selectivity.options.matcher || Selectivity.matcher;
+            this._showResults(this.options.items.map(function(item) {
+                return matcher(item, term);
+            }).filter(function(item) {
+                return !!item;
+            }), { term: term });
+        } else if (this.options.query) {
+            this.options.query({
+                callback: function(response) {
+                    if (response && response.results) {
+                        this._showResults(
+                            Selectivity.processItems(response.results),
+                            { hasMore: !!response.more, term: term }
+                        );
+                    } else {
+                        throw new Error('callback must be passed a response object');
+                    }
+                }.bind(this),
+                error: this.showError.bind(this),
+                offset: 0,
+                selectivity: this.selectivity,
+                term: term
+            });
+        }
+    },
+
+    /**
+     * Selects the highlighted item.
+     */
+    selectHighlight: function() {
+
+        if (this.highlightedResult) {
+            this.selectItem(this.highlightedResult.id);
+        } else if (this.loadMoreHighlighted) {
+            this.loadMore();
+        }
+    },
+
+    /**
+     * Selects the item with the given ID.
+     *
+     * @param id ID of the item to select.
+     */
+    selectItem: function(id) {
+
+        var item = Selectivity.findNestedById(this.results, id);
+        if (item && !item.disabled && item.selectable !== false) {
+            var options = { id: id, item: item };
+            if (this.selectivity.triggerEvent('selectivity-selecting', options)) {
+                this.selectivity.triggerEvent('selectivity-selected', options);
+            }
+        }
+    },
+
+    /**
+     * Shows an error message.
+     *
+     * @param message Error message to display.
+     * @param options Options object. May contain the following property:
+     *                escape - Set to false to disable HTML-escaping of the message. Useful if you
+     *                         want to set raw HTML as the message, but may open you up to XSS
+     *                         attacks if you're not careful with escaping user input.
+     */
+    showError: function(message, options) {
+
+        this.resultsContainer.innerHTML = this.selectivity.template('error', {
+            escape: !options || options.escape !== false,
+            message: message
+        });
+
+        this.hasMore = false;
+        this.results = [];
+
+        this.highlightedResult = null;
+        this.loadMoreHighlighted = false;
+
+        this.position();
+    },
+
+    /**
+     * Shows a loading indicator in the dropdown.
+     */
+    showLoading: function() {
+
+        this.resultsContainer.innerHTML = this.selectivity.template('loading');
+
+        this.hasMore = false;
+        this.results = [];
+
+        this.highlightedResult = null;
+        this.loadMoreHighlighted = false;
+
+        this.position();
+    },
+
+    /**
+     * Shows the results from a search query.
+     *
+     * @param results Array of result items.
+     * @param options Options object. May contain the following properties:
+     *                add - True if the results should be added to any already shown results.
+     *                dropdown - The dropdown instance for which the results are meant.
+     *                hasMore - Boolean whether more results can be fetched using the query()
+     *                          function.
+     *                term - The search term for which the results are displayed.
+     */
+    showResults: function(results, options) {
+
+        if (options.add) {
+            removeElement(this.$('.selectivity-loading'));
+        } else {
+            this.resultsContainer.innerHTML = '';
+        }
+
+        var resultsHtml = this.renderItems(this.selectivity.filterResults(results));
+        if (options.hasMore) {
+            resultsHtml += this.selectivity.template('loadMore');
+        } else if (!resultsHtml && !options.add) {
+            resultsHtml = this.selectivity.template('noResults', { term: options.term });
+        }
+        this.resultsContainer.innerHTML += resultsHtml;
+
+        this.results = (options.add ? this.results.concat(results) : results);
+
+        this.hasMore = options.hasMore;
+
+        var value = this.selectivity.getValue();
+        if (value && !Array.isArray(value)) {
+            var item = Selectivity.findNestedById(results, value);
+            if (item) {
+                this.highlight(item, { reason: 'current_value' });
+            }
+        } else if (this.options.highlightFirstItem !== false &&
+                   (!options.add || this.loadMoreHighlighted)) {
+            this._highlightFirstItem(results);
+        }
+
+        this.position();
+    },
+
+    /**
+     * Triggers the 'selectivity-close' event.
+     */
+    triggerClose: function() {
+
+        this.selectivity.triggerEvent('selectivity-close');
+    },
+
+    /**
+     * Triggers the 'selectivity-open' event.
+     */
+    triggerOpen: function() {
+
+        this.selectivity.triggerEvent('selectivity-open');
+    },
+
+    /**
+     * @private
+     */
+    _attachScrollListeners: function() {
+
+        for (var i = 0; i < SCROLL_EVENTS.length; i++) {
+            window.addEventListener(SCROLL_EVENTS[i], this.position, true);
+        }
+        window.addEventListener('resize', this.position);
+    },
+
+    /**
+     * @private
+     */
+    _highlightFirstItem: function(results) {
+
+        function findFirstItem(results) {
+            for (var i = 0, length = results.length; i < length; i++) {
+                var result = results[i];
+                if (result.id) {
+                    return result;
+                } else if (result.children) {
+                    var item = findFirstItem(result.children);
+                    if (item) {
+                        return item;
+                    }
+                }
+            }
+        }
+
+        var firstItem = findFirstItem(results);
+        if (firstItem) {
+            this.highlight(firstItem, { reason: 'first_result' });
+        } else {
+            this.highlightedResult = null;
+            this.loadMoreHighlighted = false;
+        }
+    },
+
+    /**
+     * @private
+     */
+    _loadMoreClicked: function(event) {
+
+        this.loadMore();
+
+        stopPropagation(event);
+    },
+
+    /**
+     * @private
+     */
+    _loadMoreHovered: function(event) {
+
+        if (event.screenX === undefined || event.screenX !== this._lastMousePosition.x ||
+            event.screenY === undefined || event.screenY !== this._lastMousePosition.y) {
+            this.highlightLoadMore();
+
+            this._recordMousePosition(event);
+        }
+    },
+
+    /**
+     * @private
+     */
+    _recordMousePosition: function(event) {
+
+        this._lastMousePosition = { x: event.screenX, y: event.screenY };
+    },
+
+    /**
+     * @private
+     */
+    _removeScrollListeners: function() {
+
+        for (var i = 0; i < SCROLL_EVENTS.length; i++) {
+            window.removeEventListener(SCROLL_EVENTS[i], this.position, true);
+        }
+        window.removeEventListener('resize', this.position);
+    },
+
+    /**
+     * @private
+     */
+    _resultClicked: function(event) {
+
+        this.selectItem(this.selectivity.getRelatedItemId(event));
+
+        stopPropagation(event);
+    },
+
+    /**
+     * @private
+     */
+    _resultHovered: function(event) {
+
+        if (!event.screenX || event.screenX !== this._lastMousePosition.x ||
+            !event.screenY || event.screenY !== this._lastMousePosition.y) {
+            var id = this.selectivity.getRelatedItemId(event);
+            var item = Selectivity.findNestedById(this.results, id);
+            if (item && !item.disabled) {
+                this.highlight(item, { reason: 'hovered' });
+            }
+
+            this._recordMousePosition(event);
+        }
+    },
+
+    /**
+     * @private
+     */
+    _scrolled: function() {
+
+        var el = this.$(LOAD_MORE_SELECTOR);
+        if (el && el.offsetTop - this.resultsContainer.scrollTop < this.el.clientHeight) {
+            this.loadMore();
+        }
+    },
+
+    /**
+     * @private
+     */
+    _showResults: function(results, options) {
+
+        this.showResults(results, extend({ dropdown: this }, options));
+    },
+
+    /**
+     * @private
+     */
+    _suppressWheel: function() {
+
+        var suppressWheelSelector = this.selectivity.options.suppressWheelSelector;
+        if (suppressWheelSelector === null) {
+            return;
+        }
+
+        var selector = suppressWheelSelector || '.selectivity-results-container';
+        this.events.on('wheel', selector, function(event) {
+            // Thanks to Troy Alford:
+            // http://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element
+
+            var delta = (event.deltaMode === 0 ? event.deltaY : event.deltaY * 40);
+            var el = findClosestElementMatchingSelector(event.target, selector);
+            var height = el.clientHeight;
+            var scrollHeight = el.scrollHeight;
+            var scrollTop = el.scrollTop;
+
+            function prevent() {
+                stopPropagation(event);
+                event.preventDefault();
+            }
+
+            if (scrollHeight > height) {
+                if (delta < -scrollTop) {
+                    // Scrolling up, but this will take us past the top.
+                    el.scrollTop = 0;
+                    prevent();
+                } else if (delta > scrollHeight - height - scrollTop) {
+                    // Scrolling down, but this will take us past the bottom.
+                    el.scrollTop = scrollHeight;
+                    prevent();
+                }
+            }
+        });
     }
 
 });
 
-module.exports = EventDelegator;
+module.exports = Selectivity.Dropdown = SelectivityDropdown;
 
-},{"jquery":"jquery"}],15:[function(_dereq_,module,exports){
+},{"20":20,"35":35,"38":38,"40":40,"41":41,"42":42,"43":43,"44":44,"lodash/extend":"lodash/extend"}],20:[function(_dereq_,module,exports){
 'use strict';
 
-var $ = window.jQuery || window.Zepto;
-var debounce = _dereq_(5);
+var extend = (window.jQuery || window.Zepto).extend;
+var isString = _dereq_(13);
 
-var Selectivity = _dereq_(17);
+var matchesSelector = _dereq_(40);
 
-_dereq_(23);
+var CAPTURED_EVENTS = ['blur', 'focus', 'mouseenter', 'mouseleave', 'scroll'];
+
+/**
+ * Listens to events dispatched to an element or its children.
+ *
+ * @param el The element to listen to.
+ * @param context Optional context in which to execute the callbacks.
+ */
+function EventListener(el, context) {
+
+    this.context = context || null;
+
+    this.el = el;
+
+    this.events = {};
+
+    this._onEvent = this._onEvent.bind(this);
+}
+
+extend(EventListener.prototype, {
+
+    /**
+     * Destructor.
+     *
+     * Removes all event listeners and cleans up all references.
+     */
+    destruct: function() {
+
+        Object.keys(this.events).forEach(function(eventName) {
+            var useCapture = CAPTURED_EVENTS.indexOf(eventName) > -1;
+            this.el.removeEventListener(eventName, this._onEvent, useCapture);
+        }, this);
+
+        this.context = null;
+        this.el = null;
+        this.events = null;
+    },
+
+    /**
+     * Stops listening to an event.
+     *
+     * The arguments are the same as for on(), but when no callback is given, all callbacks for the
+     * given event and class are discarded.
+     */
+    off: function(eventName, selector, callback) {
+
+        if (!isString(selector)) {
+            callback = selector;
+            selector = '';
+        }
+
+        if (callback) {
+            var events = this.events[eventName][selector];
+            for (var i = 0; i < events.length; i++) {
+                if (events[i] === callback) {
+                    events.splice(i, 1);
+                    i--;
+                }
+            }
+        } else {
+            this.events[eventName][selector] = [];
+        }
+    },
+
+    /**
+     * Starts listening to an event.
+     *
+     * @param eventName Name of the event to listen to, in lower-case.
+     * @param selector Optional CSS selector. If given, only events inside a child element matching
+     *                 the selector are caught.
+     * @param callback Callback to invoke when the event is caught.
+     *
+     * Alternatively, the arguments may be provided using a map to start listening to multiple
+     * events at once. Here, the keys of the map are eventNames and the values are callbacks.
+     * Selectors may be specified by separating them from the event name with a space. For example:
+     *
+     *     .on({
+     *         'blur': this._blurred,
+     *         'click .some-input': this._inputClicked,
+     *     })
+     */
+    on: function(eventName, selector, callback) {
+
+        if (!isString(eventName)) {
+            var eventsMap = eventName;
+            for (var key in eventsMap) {
+                if (eventsMap.hasOwnProperty(key)) {
+                    var split = key.split(' ');
+                    if (split.length > 1) {
+                        this.on(split[0], split[1], eventsMap[key]);
+                    } else {
+                        this.on(split[0], eventsMap[key]);
+                    }
+                }
+            }
+            return;
+        }
+
+        if (!isString(selector)) {
+            callback = selector;
+            selector = '';
+        }
+
+        if (!this.events.hasOwnProperty(eventName)) {
+            var useCapture = CAPTURED_EVENTS.indexOf(eventName) > -1;
+            this.el.addEventListener(eventName, this._onEvent, useCapture);
+
+            this.events[eventName] = {};
+        }
+
+        if (!this.events[eventName].hasOwnProperty(selector)) {
+            this.events[eventName][selector] = [];
+        }
+
+        if (this.events[eventName][selector].indexOf(callback) < 0) {
+            this.events[eventName][selector].push(callback);
+        }
+    },
+
+    _onEvent: function(event) {
+
+        var isPropagationStopped = false;
+        var stopPropagation = event.stopPropagation;
+        event.stopPropagation = function() {
+            stopPropagation.call(event);
+            isPropagationStopped = true;
+        };
+
+        var context = this.context;
+        function callAll(callbacks) {
+            for (var i = 0; i < callbacks.length; i++) {
+                callbacks[i].call(context, event);
+            }
+        }
+
+        var target = event.target;
+        var events = this.events[event.type.toLowerCase()];
+        while (target && target !== this.el && !isPropagationStopped) {
+            for (var selector in events) {
+                if (selector && events.hasOwnProperty(selector) &&
+                    matchesSelector(target, selector)) {
+                    callAll(events[selector]);
+                }
+            }
+            target = target.parentElement;
+        }
+
+        if (!isPropagationStopped && events.hasOwnProperty('')) {
+            callAll(events['']);
+        }
+    }
+
+});
+
+module.exports = EventListener;
+
+},{"13":13,"40":40,"lodash/extend":"lodash/extend"}],21:[function(_dereq_,module,exports){
+'use strict';
+
+var extend = (window.jQuery || window.Zepto).extend;
+
+var MultipleInput = _dereq_(22);
+var Selectivity = _dereq_(35);
+
+function isValidEmail(email) {
+
+    var atIndex = email.indexOf('@');
+    if (atIndex === -1 || email.indexOf(' ') > -1) {
+        return false; // email needs to have an '@', and may not contain any spaces
+    }
+
+    var dotIndex = email.lastIndexOf('.');
+    if (dotIndex === -1) {
+        // no dot is fine, as long as the '@' is followed by at least two more characters
+        return atIndex < email.length - 2;
+    }
+
+    // but if there is a dot after the '@', it must be followed by at least two more characters
+    return (dotIndex > atIndex ? dotIndex < email.length - 2 : true);
+}
+
+function lastWord(token, length) {
+
+    length = (length === undefined ? token.length : length);
+    for (var i = length - 1; i >= 0; i--) {
+        if ((/\s/).test(token[i])) {
+            return token.slice(i + 1, length);
+        }
+    }
+    return token.slice(0, length);
+}
+
+function stripEnclosure(token, enclosure) {
+
+    if (token.charAt(0) === enclosure[0] && token.slice(-1) === enclosure[1]) {
+        return token.slice(1, -1).trim();
+    } else {
+        return token.trim();
+    }
+}
+
+function createEmailItem(token) {
+
+    var email = lastWord(token);
+    var name = token.slice(0, -email.length).trim();
+    if (isValidEmail(email)) {
+        email = stripEnclosure(stripEnclosure(email, '()'), '<>');
+        name = stripEnclosure(name, '""').trim() || email;
+        return { id: email, text: name };
+    } else {
+        return (token.trim() ? { id: token, text: token } : null);
+    }
+}
+
+function emailTokenizer(input, selection, createToken) {
+
+    function hasToken(input) {
+        if (input) {
+            for (var i = 0, length = input.length; i < length; i++) {
+                switch (input[i]) {
+                case ';':
+                case ',':
+                case '\n':
+                    return true;
+                case ' ':
+                case '\t':
+                    if (isValidEmail(lastWord(input, i))) {
+                        return true;
+                    }
+                    break;
+                case '"':
+                    do {
+                        i++;
+                    } while (i < length && input[i] !== '"');
+                    break;
+                default:
+                    continue;
+                }
+            }
+        }
+        return false;
+    }
+
+    function takeToken(input) {
+        for (var i = 0, length = input.length; i < length; i++) {
+            switch (input[i]) {
+            case ';':
+            case ',':
+            case '\n':
+                return { term: input.slice(0, i), input: input.slice(i + 1) };
+            case ' ':
+            case '\t':
+                if (isValidEmail(lastWord(input, i))) {
+                    return { term: input.slice(0, i), input: input.slice(i + 1) };
+                }
+                break;
+            case '"':
+                do {
+                    i++;
+                } while (i < length && input[i] !== '"');
+                break;
+            default:
+                continue;
+            }
+        }
+        return {};
+    }
+
+    while (hasToken(input)) {
+        var token = takeToken(input);
+        if (token.term) {
+            var item = createEmailItem(token.term);
+            if (item && !(item.id && Selectivity.findById(selection, item.id))) {
+                createToken(item);
+            }
+        }
+        input = token.input;
+    }
+
+    return input;
+}
+
+/**
+ * EmailInput Constructor.
+ *
+ * @param options Options object. Accepts all options from the MultipleInput Constructor.
+ */
+function EmailInput(options) {
+
+    MultipleInput.call(this, extend({
+        createTokenItem: createEmailItem,
+        showDropdown: false,
+        tokenizer: emailTokenizer
+    }, options));
+
+    this.events.on('blur', function() {
+        var input = this.input;
+        if (input && isValidEmail(lastWord(input.value))) {
+            this.add(createEmailItem(input.value));
+        }
+    });
+}
+
+Selectivity.inherits(EmailInput, MultipleInput);
+
+module.exports = Selectivity.Inputs.Email = EmailInput;
+
+},{"22":22,"35":35,"lodash/extend":"lodash/extend"}],22:[function(_dereq_,module,exports){
+'use strict';
+
+var extend = (window.jQuery || window.Zepto).extend;
+var isString = _dereq_(13);
+
+var Selectivity = _dereq_(35);
+var getItemSelector = _dereq_(38);
+var getKeyCode = _dereq_(39);
+var parseElement = _dereq_(41);
+var removeElement = _dereq_(42);
+var stopPropagation = _dereq_(43);
+var toggleClass = _dereq_(44);
+
+var KEY_BACKSPACE = 8;
+var KEY_DELETE = 46;
+var KEY_ENTER = 13;
+
+var INPUT_SELECTOR = '.selectivity-multiple-input';
+var SELECTED_ITEM_SELECTOR = '.selectivity-multiple-selected-item';
+
+var hasTouch = 'ontouchstart' in window;
+
+/**
+ * MultipleInput Constructor.
+ */
+function MultipleInput(options) {
+
+    Selectivity.call(this, extend({
+        // dropdowns for multiple-value inputs should open below the select box,
+        // unless there is not enough space below, but there is space enough above, then it should
+        // open upwards
+        positionDropdown: function(el, selectEl) {
+            var rect = selectEl.getBoundingClientRect();
+            var dropdownHeight = el.clientHeight;
+            var openUpwards = (rect.bottom + dropdownHeight > window.innerHeight &&
+                               rect.top - dropdownHeight > 0);
+
+            extend(el.style, {
+                left: rect.left + 'px',
+                top: (openUpwards ? rect.top - dropdownHeight : rect.bottom) + 'px',
+                width: rect.width + 'px'
+            });
+        },
+
+        showSearchInputInDropdown: false
+    }, options));
+
+    this._reset();
+
+    var events = {
+        'change': this.rerenderSelection,
+        'click': this._clicked,
+        'selectivity-selected': this._resultSelected
+    };
+    events['change ' + INPUT_SELECTOR] = stopPropagation;
+    events['click ' + SELECTED_ITEM_SELECTOR] = this._itemClicked;
+    events['click ' + SELECTED_ITEM_SELECTOR + '-remove'] = this._itemRemoveClicked;
+    events['keydown ' + INPUT_SELECTOR] = this._keyHeld;
+    events['keyup ' + INPUT_SELECTOR] = this._keyReleased;
+    events['paste ' + INPUT_SELECTOR] = this._onPaste;
+
+    this.events.on(events);
+}
+
+/**
+ * Methods.
+ */
+var callSuper = Selectivity.inherits(MultipleInput, Selectivity, {
+
+    /**
+     * Adds an item to the selection, if it's not selected yet.
+     *
+     * @param item The item to add. May be an item with 'id' and 'text' properties or just an ID.
+     */
+    add: function(item) {
+
+        var itemIsId = Selectivity.isValidId(item);
+        var id = (itemIsId ? item : this.validateItem(item) && item.id);
+
+        if (this._value.indexOf(id) === -1) {
+            this._value.push(id);
+
+            if (itemIsId && this.options.initSelection) {
+                this.options.initSelection([id], function(data) {
+                    if (this._value.indexOf(id) > -1) {
+                        item = this.validateItem(data[0]);
+                        this._data.push(item);
+
+                        this.triggerChange({ added: item });
+                    }
+                }.bind(this));
+            } else {
+                if (itemIsId) {
+                    item = this.getItemForId(id);
+                }
+                this._data.push(item);
+
+                this.triggerChange({ added: item });
+            }
+        }
+
+        this.input.value = '';
+        this._updateInputWidth();
+    },
+
+    /**
+     * Clears the data and value.
+     */
+    clear: function() {
+
+        this.setData([]);
+    },
+
+    /**
+     * @inherit
+     */
+    filterResults: function(results) {
+
+        return results.filter(function(item) {
+            return !Selectivity.findById(this._data, item.id);
+        }, this);
+    },
+
+    /**
+     * Returns the correct data for a given value.
+     *
+     * @param value The value to get the data for. Should be an array of IDs.
+     *
+     * @return The corresponding data. Will be an array of objects with 'id' and 'text' properties.
+     *         Note that if no items are defined, this method assumes the text labels will be equal
+     *         to the IDs.
+     */
+    getDataForValue: function(value) {
+
+        return value.map(this.getItemForId, this).filter(function(item) {
+            return !!item;
+        });
+    },
+
+    /**
+     * Returns the correct value for the given data.
+     *
+     * @param data The data to get the value for. Should be an array of objects with 'id' and 'text'
+     *             properties.
+     *
+     * @return The corresponding value. Will be an array of IDs.
+     */
+    getValueForData: function(data) {
+
+        return data.map(function(item) {
+            return item.id;
+        });
+    },
+
+    /**
+     * Removes an item from the selection, if it is selected.
+     *
+     * @param item The item to remove. May be an item with 'id' and 'text' properties or just an ID.
+     */
+    remove: function(item) {
+
+        var id = item.id || item;
+
+        var removedItem;
+        var index = Selectivity.findIndexById(this._data, id);
+        if (index > -1) {
+            removedItem = this._data[index];
+            this._data.splice(index, 1);
+        }
+
+        if (this._value[index] !== id) {
+            index = this._value.indexOf(id);
+        }
+        if (index > -1) {
+            this._value.splice(index, 1);
+        }
+
+        if (removedItem) {
+            this.triggerChange({ removed: removedItem });
+        }
+
+        if (id === this._highlightedItemId) {
+            this._highlightedItemId = null;
+        }
+
+        this._updateInputWidth();
+    },
+
+    /**
+     * Re-renders the selection.
+     *
+     * Normally the UI is automatically updated whenever the selection changes, but you may want to
+     * call this method explicitly if you've updated the selection with the triggerChange option set
+     * to false.
+     */
+    rerenderSelection: function(event) {
+
+        event = event || {};
+
+        if (event.added) {
+            this._renderSelectedItem(event.added);
+
+            this._scrollToBottom();
+        } else if (event.removed) {
+            removeElement(this.$(getItemSelector(SELECTED_ITEM_SELECTOR, event.removed.id)));
+        } else {
+            this._forEachSelectedItem(removeElement);
+
+            this._data.forEach(this._renderSelectedItem, this);
+
+            this._updateInputWidth();
+        }
+
+        if (event.added || event.removed) {
+            if (this.dropdown) {
+                this.dropdown.showResults(this.filterResults(this.dropdown.results), {
+                    hasMore: this.dropdown.hasMore
+                });
+            }
+
+            if (!hasTouch) {
+                this.focus();
+            }
+        }
+
+        this.positionDropdown();
+
+        this._updatePlaceholder();
+    },
+
+    /**
+     * @inherit
+     */
+    search: function(term) {
+
+        if (this.options.tokenizer) {
+            term = this.options.tokenizer(term, this._data, this.add.bind(this), this.options);
+
+            if (isString(term) && term !== this.input.value) {
+                this.input.value = term;
+            }
+        }
+
+        this._updateInputWidth();
+
+        if (this.dropdown) {
+            callSuper(this, 'search', term);
+        }
+    },
+
+    /**
+     * @inherit
+     */
+    setOptions: function(options) {
+
+        var wasEnabled = this.enabled;
+
+        callSuper(this, 'setOptions', options);
+
+        if (wasEnabled !== this.enabled) {
+            this._reset();
+        }
+    },
+
+    /**
+     * Validates data to set. Throws an exception if the data is invalid.
+     *
+     * @param data The data to validate. Should be an array of objects with 'id' and 'text'
+     *             properties.
+     *
+     * @return The validated data. This may differ from the input data.
+     */
+    validateData: function(data) {
+
+        if (data === null) {
+            return [];
+        } else if (Array.isArray(data)) {
+            return data.map(this.validateItem, this);
+        } else {
+            throw new Error('Data for MultiSelectivity instance should be an array');
+        }
+    },
+
+    /**
+     * Validates a value to set. Throws an exception if the value is invalid.
+     *
+     * @param value The value to validate. Should be an array of IDs.
+     *
+     * @return The validated value. This may differ from the input value.
+     */
+    validateValue: function(value) {
+
+        if (value === null) {
+            return [];
+        } else if (Array.isArray(value)) {
+            if (value.every(Selectivity.isValidId)) {
+                return value;
+            } else {
+                throw new Error('Value contains invalid IDs');
+            }
+        } else {
+            throw new Error('Value for MultiSelectivity instance should be an array');
+        }
+    },
+
+    /**
+     * @private
+     */
+    _backspacePressed: function() {
+
+        if (this.options.backspaceHighlightsBeforeDelete) {
+            if (this._highlightedItemId) {
+                this._deletePressed();
+            } else if (this._value.length) {
+                this._highlightItem(this._value.slice(-1)[0]);
+            }
+        } else if (this._value.length) {
+            this.remove(this._value.slice(-1)[0]);
+        }
+    },
+
+    /**
+     * @private
+     */
+    _clicked: function(event) {
+
+        if (this.enabled) {
+            if (this.options.showDropdown !== false) {
+                this.open();
+            } else {
+                this.focus();
+            }
+
+            stopPropagation(event);
+        }
+    },
+
+    /**
+     * @private
+     */
+    _createToken: function() {
+
+        var term = this.input.value;
+        var createTokenItem = this.options.createTokenItem;
+
+        if (term && createTokenItem) {
+            var item = createTokenItem(term);
+            if (item) {
+                this.add(item);
+            }
+        }
+    },
+
+    /**
+     * @private
+     */
+    _deletePressed: function() {
+
+        if (this._highlightedItemId) {
+            this.remove(this._highlightedItemId);
+        }
+    },
+
+    /**
+     * @private
+     */
+    _forEachSelectedItem: function(callback) {
+
+        Array.prototype.forEach.call(this.el.querySelectorAll(SELECTED_ITEM_SELECTOR), callback);
+    },
+
+    /**
+     * @private
+     */
+    _highlightItem: function(id) {
+
+        this._highlightedItemId = id;
+
+        this._forEachSelectedItem(function(el) {
+            toggleClass(el, 'highlighted', el.getAttribute('data-item-id') === id);
+        });
+
+        if (!hasTouch) {
+            this.focus();
+        }
+    },
+
+    /**
+     * @private
+     */
+    _itemClicked: function(event) {
+
+        if (this.enabled) {
+            this._highlightItem(this.getRelatedItemId(event));
+        }
+    },
+
+    /**
+     * @private
+     */
+    _itemRemoveClicked: function(event) {
+
+        this.remove(this.getRelatedItemId(event));
+
+        stopPropagation(event);
+    },
+
+    /**
+     * @private
+     */
+    _keyHeld: function(event) {
+
+        this._originalValue = this.input.value;
+
+        if (getKeyCode(event) === KEY_ENTER && !event.ctrlKey) {
+            event.preventDefault();
+        }
+    },
+
+    /**
+     * @private
+     */
+    _keyReleased: function(event) {
+
+        var inputHadText = !!this._originalValue;
+        var keyCode = getKeyCode(event);
+
+        if (keyCode === KEY_ENTER && !event.ctrlKey) {
+            this._createToken();
+        } else if (keyCode === KEY_BACKSPACE && !inputHadText) {
+            this._backspacePressed();
+        } else if (keyCode === KEY_DELETE && !inputHadText) {
+            this._deletePressed();
+        }
+    },
+
+    /**
+     * @private
+     */
+    _onPaste: function() {
+
+        setTimeout(function() {
+            this.search(this.input.value);
+
+            this._createToken();
+        }.bind(this), 10);
+    },
+
+    /**
+     * @private
+     */
+    _renderSelectedItem: function(item) {
+
+        var el = parseElement(this.template('multipleSelectedItem', extend({
+            highlighted: (item.id === this._highlightedItemId),
+            removable: !this.options.readOnly
+        }, item)));
+
+        this.input.parentNode.insertBefore(el, this.input);
+    },
+
+    /**
+     * @private
+     */
+    _reset: function() {
+
+        this.el.innerHTML = this.template('multipleSelectInput', { enabled: this.enabled });
+
+        this._highlightedItemId = null;
+
+        this.initInput(this.$(INPUT_SELECTOR));
+
+        this.rerenderSelection();
+    },
+
+    /**
+     * @private
+     */
+    _resultSelected: function(event) {
+
+        if (this._value.indexOf(event.id) === -1) {
+            this.add(event.item);
+        } else {
+            this.remove(event.item);
+        }
+    },
+
+    /**
+     * @private
+     */
+    _scrollToBottom: function() {
+
+        var inputContainer = this.$(INPUT_SELECTOR + '-container');
+        inputContainer.scrollTop = inputContainer.clientHeight;
+    },
+
+    /**
+     * @private
+     */
+    _updateInputWidth: function() {
+
+        if (this.enabled) {
+            var inputContent = (this.input.value ||
+                                !this._data.length && this.options.placeholder || '');
+            this.input.setAttribute('size', inputContent.length + 2);
+
+            this.positionDropdown();
+        }
+    },
+
+    /**
+     * @private
+     */
+    _updatePlaceholder: function() {
+
+        var placeholder = (!this._data.length && this.options.placeholder || '');
+        if (this.enabled) {
+            this.input.setAttribute('placeholder', placeholder);
+        } else {
+            this.$('.selectivity-placeholder').textContent = placeholder;
+        }
+    }
+
+});
+
+module.exports = Selectivity.Inputs.Multiple = MultipleInput;
+
+},{"13":13,"35":35,"38":38,"39":39,"41":41,"42":42,"43":43,"44":44,"lodash/extend":"lodash/extend"}],23:[function(_dereq_,module,exports){
+'use strict';
+
+var extend = (window.jQuery || window.Zepto).extend;
+
+var Selectivity = _dereq_(35);
+var stopPropagation = _dereq_(43);
+
+/**
+ * SingleInput Constructor.
+ */
+function SingleInput(options) {
+
+    Selectivity.call(this, extend({
+        // dropdowns for single-value inputs should open below the select box,
+        // unless there is not enough space below, in which case the dropdown should be moved up
+        // just enough so it fits in the window, but never so much that it reaches above the top
+        positionDropdown: function(el, selectEl) {
+            var rect = selectEl.getBoundingClientRect();
+            var dropdownTop = rect.bottom;
+
+            var deltaUp = Math.min(
+                Math.max(dropdownTop + el.clientHeight - window.innerHeight, 0),
+                rect.top + rect.height
+            );
+
+            extend(el.style, {
+                left: rect.left + 'px',
+                top: dropdownTop - deltaUp + 'px',
+                width: rect.width + 'px'
+            });
+        }
+    }, options));
+
+    this.el.innerHTML = this.template('singleSelectInput', this.options);
+
+    this.rerenderSelection();
+
+    if (options.showSearchInputInDropdown === false) {
+        this.initInput(this.$('.selectivity-single-select-input'), { search: false });
+    }
+
+    this.events.on({
+        'change': this.rerenderSelection,
+        'click': this._clicked,
+        'click .selectivity-search-input': stopPropagation,
+        'click .selectivity-single-selected-item-remove': this._itemRemoveClicked,
+        'focus .selectivity-single-select-input': this._focused,
+        'selectivity-selected': this._resultSelected
+    });
+}
+
+/**
+ * Methods.
+ */
+var callSuper = Selectivity.inherits(SingleInput, Selectivity, {
+
+    /**
+     * Clears the data and value.
+     */
+    clear: function() {
+
+        this.setData(null);
+    },
+
+    /**
+     * @inherit
+     *
+     * @param options Optional options object. May contain the following property:
+     *                keepFocus - If true, the focus will remain on the input.
+     */
+    close: function(options) {
+
+        this._closing = true;
+
+        callSuper(this, 'close');
+
+        if (options && options.keepFocus && this.input) {
+            this.input.focus();
+        }
+
+        this._closing = false;
+    },
+
+    /**
+     * Returns the correct data for a given value.
+     *
+     * @param value The value to get the data for. Should be an ID.
+     *
+     * @return The corresponding data. Will be an object with 'id' and 'text' properties. Note that
+     *         if no items are defined, this method assumes the text label will be equal to the ID.
+     */
+    getDataForValue: function(value) {
+
+        return this.getItemForId(value);
+    },
+
+    /**
+     * Returns the correct value for the given data.
+     *
+     * @param data The data to get the value for. Should be an object with 'id' and 'text'
+     *             properties or null.
+     *
+     * @return The corresponding value. Will be an ID or null.
+     */
+    getValueForData: function(data) {
+
+        return (data ? data.id : null);
+    },
+
+    /**
+     * Re-renders the selection.
+     *
+     * Normally the UI is automatically updated whenever the selection changes, but you may want to
+     * call this method explicitly if you've updated the selection with the triggerChange option set
+     * to false.
+     */
+    rerenderSelection: function() {
+
+        var template = (this._data ? 'singleSelectedItem' : 'singleSelectPlaceholder');
+        var options = (this._data ? extend({
+            removable: this.options.allowClear && !this.options.readOnly
+        }, this._data) : { placeholder: this.options.placeholder });
+
+        this.$('.selectivity-single-result-container').innerHTML = this.template(template, options);
+    },
+
+    /**
+     * Validates data to set. Throws an exception if the data is invalid.
+     *
+     * @param data The data to validate. Should be an object with 'id' and 'text' properties or null
+     *             to indicate no item is selected.
+     *
+     * @return The validated data. This may differ from the input data.
+     */
+    validateData: function(data) {
+
+        return (data === null ? data : this.validateItem(data));
+    },
+
+    /**
+     * Validates a value to set. Throws an exception if the value is invalid.
+     *
+     * @param value The value to validate. Should be null or a valid ID.
+     *
+     * @return The validated value. This may differ from the input value.
+     */
+    validateValue: function(value) {
+
+        if (value === null || Selectivity.isValidId(value)) {
+            return value;
+        } else {
+            throw new Error('Value for SingleSelectivity instance should be a valid ID or null');
+        }
+    },
+
+    /**
+     * @private
+     */
+    _clicked: function() {
+
+        if (this.enabled) {
+            if (this.dropdown) {
+                this.close({ keepFocus: true });
+            } else if (this.options.showDropdown !== false) {
+                this.open();
+            }
+        }
+    },
+
+    /**
+     * @private
+     */
+    _focused: function() {
+
+        if (this.enabled && !this._closing && !this._opening &&
+            this.options.showDropdown !== false) {
+            this.open();
+        }
+    },
+
+    /**
+     * @private
+     */
+    _itemRemoveClicked: function(event) {
+
+        this.setData(null);
+
+        stopPropagation(event);
+    },
+
+    /**
+     * @private
+     */
+    _resultSelected: function(event) {
+
+        this.setData(event.item);
+
+        this.close({ keepFocus: true });
+    }
+
+});
+
+module.exports = Selectivity.Inputs.Single = SingleInput;
+
+},{"35":35,"43":43,"lodash/extend":"lodash/extend"}],24:[function(_dereq_,module,exports){
+'use strict';
+
+var escape = _dereq_(9);
+
+var Selectivity = _dereq_(35);
+
+/**
+ * Localizable elements of the Selectivity Templates.
+ *
+ * Be aware that these strings are added straight to the HTML output of the templates, so any
+ * non-safe strings should be escaped.
+ */
+module.exports = Selectivity.Locale = {
+
+    loading: 'Loading...',
+    loadMore: 'Load more...',
+    noResults: 'No results found',
+
+    ajaxError: function(term) {
+        if (term) {
+            return 'Failed to fetch results for <b>' + escape(term) + '</b>';
+        } else {
+            return 'Failed to fetch results';
+        }
+    },
+
+    needMoreCharacters: function(numCharacters) {
+        return 'Enter ' + numCharacters + ' more characters to search';
+    },
+
+    noResultsForTerm: function(term) {
+        return 'No results for <b>' + escape(term) + '</b>';
+    }
+
+};
+
+},{"35":35,"9":9}],25:[function(_dereq_,module,exports){
+'use strict';
+
+var debounce = _dereq_(8);
+
+var Selectivity = _dereq_(35);
+var Locale = _dereq_(24);
+
+function addUrlParam(url, key, value) {
+    return url + (url.indexOf('?') > -1 ? '&' : '?') + key + '=' + encodeURIComponent(value);
+}
+
+function pick(object, keys) {
+    var result = {};
+    keys.forEach(function(key) {
+        if (object[key] !== undefined) {
+            result[key] = object[key];
+        }
+    });
+    return result;
+}
+
+function doFetch(ajax, queryOptions) {
+
+    var fetch = ajax.fetch || window.fetch;
+    var term = queryOptions.term;
+
+    var url = (typeof ajax.url === 'function' ? ajax.url(queryOptions) : ajax.url);
+    if (ajax.params) {
+        var params = ajax.params(term, queryOptions.offset || 0);
+        for (var key in params) {
+            if (params.hasOwnProperty(key)) {
+                url = addUrlParam(url, key, params[key]);
+            }
+        }
+    }
+
+    var init = pick(ajax, ['body', 'cache', 'credentials', 'headers', 'integrity', 'method', 'mode',
+                           'redirect', 'referrer', 'referrerPolicy']);
+
+    fetch(url, init, queryOptions)
+        .then(function(response) {
+            if (response.ok) {
+                return response.json();
+            } else if (Array.isArray(response) || response.results) {
+                return response;
+            } else {
+                throw new Error('Unexpected AJAX response');
+            }
+        })
+        .then(function(response) {
+            if (Array.isArray(response)) {
+                queryOptions.callback({ results: response, more: false });
+            } else {
+                queryOptions.callback({ results: response.results, more: !!response.more });
+            }
+        })
+        .catch(function(error) {
+            var formatError = ajax.formatError || Locale.ajaxError;
+            queryOptions.error(formatError(term, error), { escape: false });
+        });
+}
 
 /**
  * Option listener that implements a convenience query function for performing AJAX requests.
@@ -685,65 +2537,24 @@ Selectivity.OptionListeners.unshift(function(selectivity, options) {
 
     var ajax = options.ajax;
     if (ajax && ajax.url) {
-        var formatError = ajax.formatError || Selectivity.Locale.ajaxError;
-        var minimumInputLength = ajax.minimumInputLength || 0;
-        var params = ajax.params;
-        var processItem = ajax.processItem || function(item) { return item; };
-        var quietMillis = ajax.quietMillis || 0;
-        var resultsCb = ajax.results || function(data) { return { results: data, more: false }; };
-        var transport = ajax.transport || $.ajax;
-
-        if (quietMillis) {
-            transport = debounce(transport, quietMillis);
-        }
+        var fetch = (ajax.quietMillis ? debounce(doFetch, ajax.quietMillis) : doFetch);
 
         options.query = function(queryOptions) {
-            var offset = queryOptions.offset;
-            var term = queryOptions.term;
-            if (term.length < minimumInputLength) {
-                queryOptions.error(
-                    Selectivity.Locale.needMoreCharacters(minimumInputLength - term.length)
-                );
-            } else {
-                var url = (ajax.url instanceof Function ? ajax.url(queryOptions) : ajax.url);
-                if (params) {
-                    url += (url.indexOf('?') > -1 ? '&' : '?') + $.param(params(term, offset));
-                }
-
-                var success = ajax.success;
-                var error = ajax.error;
-
-                transport($.extend({}, ajax, {
-                    url: url,
-                    success: function(data, textStatus, jqXHR) {
-                        if (success) {
-                            success(data, textStatus, jqXHR);
-                        }
-
-                        var results = resultsCb(data, offset);
-                        results.results = $.map(results.results, processItem);
-                        queryOptions.callback(results);
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        if (error) {
-                            error(jqXHR, textStatus, errorThrown);
-                        }
-
-                        queryOptions.error(
-                            formatError(term, jqXHR, textStatus, errorThrown),
-                            { escape: false }
-                        );
-                    }
-                }));
+            var numCharsNeeded = ajax.minimumInputLength - queryOptions.term.length;
+            if (numCharsNeeded > 0) {
+                queryOptions.error(Locale.needMoreCharacters(numCharsNeeded));
+                return;
             }
+
+            fetch(ajax, queryOptions);
         };
     }
 });
 
-},{"17":17,"23":23,"5":5,"jquery":"jquery"}],16:[function(_dereq_,module,exports){
+},{"24":24,"35":35,"8":8}],26:[function(_dereq_,module,exports){
 'use strict';
 
-var Selectivity = _dereq_(17);
+var Selectivity = _dereq_(35);
 
 var latestQueryNum = 0;
 
@@ -777,1001 +2588,7 @@ Selectivity.OptionListeners.push(function(selectivity, options) {
     }
 });
 
-},{"17":17}],17:[function(_dereq_,module,exports){
-'use strict';
-
-var $ = window.jQuery || window.Zepto;
-
-var EventDelegator = _dereq_(14);
-
-/**
- * Create a new Selectivity instance or invoke a method on an instance.
- *
- * @param methodName Optional name of a method to call. If omitted, a Selectivity instance is
- *                   created for each element in the set of matched elements. If an element in the
- *                   set already has a Selectivity instance, the result is the same as if the
- *                   setOptions() method is called. If a method name is given, the options
- *                   parameter is ignored and any additional parameters are passed to the given
- *                   method.
- * @param options Options object to pass to the constructor or the setOptions() method. In case
- *                a new instance is being created, the following properties are used:
- *                inputType - The input type to use. Default input types include 'Multiple' and
- *                            'Single', but you can add custom input types to the InputTypes map or
- *                            just specify one here as a function. The default value is 'Single',
- *                            unless multiple is true in which case it is 'Multiple'.
- *                multiple - Boolean determining whether multiple items may be selected
- *                           (default: false). If true, a MultipleSelectivity instance is created,
- *                           otherwise a SingleSelectivity instance is created.
- *
- * @return If the given method returns a value, this method returns the value of that method
- *         executed on the first element in the set of matched elements.
- */
-function selectivity(methodName, options) {
-
-    var methodArgs = Array.prototype.slice.call(arguments, 1);
-    var result;
-
-    this.each(function() {
-        var instance = this.selectivity;
-
-        if (instance) {
-            if ($.type(methodName) !== 'string') {
-                methodArgs = [methodName];
-                methodName = 'setOptions';
-            }
-
-            if ($.type(instance[methodName]) === 'function') {
-                if (result === undefined) {
-                    result = instance[methodName].apply(instance, methodArgs);
-                }
-            } else {
-                throw new Error('Unknown method: ' + methodName);
-            }
-        } else {
-            if ($.type(methodName) === 'string') {
-                if (methodName !== 'destroy') {
-                    throw new Error('Cannot call method on element without Selectivity instance');
-                }
-            } else {
-                options = $.extend({}, methodName, { element: this });
-
-                // this is a one-time hack to facilitate the selectivity-traditional module, because
-                // the module is not able to hook this early into creation of the instance
-                var $this = $(this);
-                if ($this.is('select') && $this.prop('multiple')) {
-                    options.multiple = true;
-                }
-
-                var InputTypes = Selectivity.InputTypes;
-                var InputType = (options.inputType || (options.multiple ? 'Multiple' : 'Single'));
-                if ($.type(InputType) !== 'function') {
-                    if (InputTypes[InputType]) {
-                        InputType = InputTypes[InputType];
-                    } else {
-                        throw new Error('Unknown Selectivity input type: ' + InputType);
-                    }
-                }
-
-                this.selectivity = new InputType(options);
-            }
-        }
-    });
-
-    return (result === undefined ? this : result);
-}
-
-/**
- * Selectivity Base Constructor.
- *
- * You will never use this constructor directly. Instead, you use $(selector).selectivity(options)
- * to create an instance of either MultipleSelectivity or SingleSelectivity. This class defines all
- * functionality that is common between both.
- *
- * @param options Options object. Accepts the same options as the setOptions method(), in addition
- *                to the following ones:
- *                data - Initial selection data to set. This should be an array of objects with 'id'
- *                       and 'text' properties. This option is mutually exclusive with 'value'.
- *                element - The DOM element to which to attach the Selectivity instance. This
- *                          property is set automatically by the $.fn.selectivity() function.
- *                value - Initial value to set. This should be an array of IDs. This property is
- *                        mutually exclusive with 'data'.
- */
-function Selectivity(options) {
-
-    if (!(this instanceof Selectivity)) {
-        return selectivity.apply(this, arguments);
-    }
-
-    /**
-     * jQuery container for the element to which this instance is attached.
-     */
-    this.$el = $(options.element);
-
-    /**
-     * jQuery container for the search input.
-     *
-     * May be null as long as there is no visible search input. It is set by initSearchInput().
-     */
-    this.$searchInput = null;
-
-    /**
-     * Reference to the currently open dropdown.
-     */
-    this.dropdown = null;
-
-    /**
-     * Whether the input is enabled.
-     *
-     * This is false when the option readOnly is false or the option removeOnly is false.
-     */
-    this.enabled = true;
-
-    /**
-     * Boolean whether the browser has touch input.
-     */
-    this.hasTouch = (typeof window !== 'undefined' && 'ontouchstart' in window);
-
-    /**
-     * Boolean whether the browser has a physical keyboard attached to it.
-     *
-     * Given that there is no way for JavaScript to reliably detect this yet, we just assume it's
-     * the opposite of hasTouch for now.
-     */
-    this.hasKeyboard = !this.hasTouch;
-
-    /**
-     * Array of items from which to select. If set, this will be an array of objects with 'id' and
-     * 'text' properties.
-     *
-     * If given, all items are expected to be available locally and all selection operations operate
-     * on this local array only. If null, items are not available locally, and a query function
-     * should be provided to fetch remote data.
-     */
-    this.items = null;
-
-    /**
-     * The function to be used for matching search results.
-     */
-    this.matcher = Selectivity.matcher;
-
-    /**
-     * Options passed to the Selectivity instance or set through setOptions().
-     */
-    this.options = {};
-
-    /**
-     * Array of search input listeners.
-     *
-     * Custom listeners can be specified in the options object.
-     */
-    this.searchInputListeners = Selectivity.SearchInputListeners;
-
-    /**
-     * Mapping of templates.
-     *
-     * Custom templates can be specified in the options object.
-     */
-    this.templates = $.extend({}, Selectivity.Templates);
-
-    /**
-     * The last used search term.
-     */
-    this.term = '';
-
-    this.setOptions(options);
-
-    this.$el.attr('tabindex', options.tabindex || 0);
-
-    if (options.value) {
-        this.value(options.value, { triggerChange: false });
-    } else {
-        this.data(options.data || null, { triggerChange: false });
-    }
-
-    this._blur = this._blur.bind(this);
-
-    this.$el.on('mouseenter', this._mouseenter.bind(this));
-    this.$el.on('mouseleave', this._mouseleave.bind(this));
-    this.$el.on('selectivity-close', this._closed.bind(this));
-    this.$el.on('blur', this._blur);
-
-    EventDelegator.call(this);
-}
-
-/**
- * Methods.
- */
-$.extend(Selectivity.prototype, EventDelegator.prototype, {
-
-    /**
-     * Convenience shortcut for this.$el.find(selector).
-     */
-    $: function(selector) {
-
-        return this.$el.find(selector);
-    },
-
-    /**
-     * Closes the dropdown.
-     */
-    close: function() {
-
-        if (this.dropdown) {
-            this.dropdown.close();
-        }
-    },
-
-    /**
-     * Sets or gets the selection data.
-     *
-     * The selection data contains both IDs and text labels. If you only want to set or get the IDs,
-     * you should use the value() method.
-     *
-     * @param newData Optional new data to set. For a MultipleSelectivity instance the data must be
-     *                an array of objects with 'id' and 'text' properties, for a SingleSelectivity
-     *                instance the data must be a single such object or null to indicate no item is
-     *                selected.
-     * @param options Optional options object. May contain the following property:
-     *                triggerChange - Set to false to suppress the "change" event being triggered.
-     *                                Note this will also cause the UI to not update automatically;
-     *                                so you may want to call rerenderSelection() manually when
-     *                                using this option.
-     *
-     * @return If newData is omitted, this method returns the current data.
-     */
-    data: function(newData, options) {
-
-        options = options || {};
-
-        if (newData === undefined) {
-            return this._data;
-        } else {
-            newData = this.validateData(newData);
-
-            this._data = newData;
-            this._value = this.getValueForData(newData);
-
-            if (options.triggerChange !== false) {
-                this.triggerChange();
-            }
-        }
-    },
-
-    /**
-     * Destroys the Selectivity instance.
-     */
-    destroy: function() {
-
-        this.undelegateEvents();
-
-        var $el = this.$el;
-        $el.children().remove();
-        $el[0].selectivity = null;
-        $el = null;
-    },
-
-    /**
-     * Filters the results to be displayed in the dropdown.
-     *
-     * The default implementation simply returns the results unfiltered, but the MultipleSelectivity
-     * class overrides this method to filter out any items that have already been selected.
-     *
-     * @param results Array of items with 'id' and 'text' properties.
-     *
-     * @return The filtered array.
-     */
-    filterResults: function(results) {
-
-        return results;
-    },
-
-    /**
-     * Applies focus to the input.
-     */
-    focus: function() {
-
-        if (this.$searchInput) {
-            this.$searchInput.focus();
-        }
-    },
-
-    /**
-     * Returns the correct item for a given ID.
-     *
-     * @param id The ID to get the item for.
-     *
-     * @return The corresponding item. Will be an object with 'id' and 'text' properties or null if
-     *         the item cannot be found. Note that if no items are defined, this method assumes the
-     *         text labels will be equal to the IDs.
-     */
-    getItemForId: function(id) {
-
-        var items = this.items;
-        if (items) {
-            return Selectivity.findNestedById(items, id);
-        } else {
-            return { id: id, text: '' + id };
-        }
-    },
-
-    /**
-     * Initializes the search input element.
-     *
-     * Sets the $searchInput property, invokes all search input listeners and attaches the default
-     * action of searching when something is typed.
-     *
-     * @param $input jQuery container for the input element.
-     * @param options Optional options object. May contain the following property:
-     *                noSearch - If true, no event handlers are setup to initiate searching when
-     *                           the user types in the input field. This is useful if you want to
-     *                           use the input only to handle keyboard support.
-     */
-    initSearchInput: function($input, options) {
-
-        this.$searchInput = $input;
-
-        this.searchInputListeners.forEach(function(listener) {
-            listener(this, $input);
-        }.bind(this));
-
-        $input.on('blur', this._blur);
-
-        if (!options || !options.noSearch) {
-            $input.on('keyup', function(event) {
-                if (!event.isDefaultPrevented()) {
-                    this.search();
-                }
-            }.bind(this));
-        }
-    },
-
-    /**
-     * Opens the dropdown.
-     *
-     * @param options Optional options object. May contain the following property:
-     *                search - Boolean whether the dropdown should be initialized by performing a
-     *                         search for the empty string (ie. display all results). Default is
-     *                         true.
-     *                showSearchInput - Boolean whether a search input should be shown in the
-     *                                  dropdown. Default is false.
-     */
-    open: function(options) {
-
-        if (this.dropdown || !this.triggerEvent('selectivity-opening')) {
-            return;
-        }
-
-        options = options || {};
-
-        var Dropdown = this.options.dropdown || Selectivity.Dropdown;
-        if (Dropdown) {
-            this.dropdown = new Dropdown({
-                items: this.items,
-                position: this.options.positionDropdown,
-                query: this.options.query,
-                selectivity: this,
-                showSearchInput: options.showSearchInput
-            });
-        }
-
-        if (options.search !== false) {
-            this.search('');
-        }
-
-        this.focus();
-
-        this.$el.toggleClass('open', true);
-    },
-
-    /**
-     * (Re-)positions the dropdown.
-     */
-    positionDropdown: function() {
-
-        if (this.dropdown) {
-            this.dropdown.position();
-        }
-    },
-
-    /**
-     * Searches for results based on the term given or the term entered in the search input.
-     *
-     * If an items array has been passed with the options to the Selectivity instance, a local
-     * search will be performed among those items. Otherwise, the query function specified in the
-     * options will be used to perform the search. If neither is defined, nothing happens.
-     *
-     * @param term Optional term to search for. If ommitted, the value of the search input element
-     *             is used as term.
-     */
-    search: function(term) {
-
-        if (term === undefined) {
-            term = (this.$searchInput ? this.$searchInput.val() : '');
-        }
-
-        this.open({ search: false });
-
-        if (this.dropdown) {
-            this.dropdown.search(term);
-        }
-    },
-
-    /**
-     * Sets one or more options on this Selectivity instance.
-     *
-     * @param options Options object. May contain one or more of the following properties:
-     *                closeOnSelect - Set to false to keep the dropdown open after the user has
-     *                                selected an item. This is useful if you want to allow the user
-     *                                to quickly select multiple items. The default value is true.
-     *                dropdown - Custom dropdown implementation to use for this instance.
-     *                initSelection - Function to map values by ID to selection data. This function
-     *                                receives two arguments, 'value' and 'callback'. The value is
-     *                                the current value of the selection, which is an ID or an array
-     *                                of IDs depending on the input type. The callback should be
-     *                                invoked with an object or array of objects, respectively,
-     *                                containing 'id' and 'text' properties.
-     *                items - Array of items from which to select. Should be an array of objects
-     *                        with 'id' and 'text' properties. As convenience, you may also pass an
-     *                        array of strings, in which case the same string is used for both the
-     *                        'id' and 'text' properties. If items are given, all items are expected
-     *                        to be available locally and all selection operations operate on this
-     *                        local array only. If null, items are not available locally, and a
-     *                        query function should be provided to fetch remote data.
-     *                matcher - Function to determine whether text matches a given search term. Note
-     *                          this function is only used if you have specified an array of items.
-     *                          Receives two arguments:
-     *                          item - The item that should match the search term.
-     *                          term - The search term. Note that for performance reasons, the term
-     *                                 has always been already processed using
-     *                                 Selectivity.transformText().
-     *                          The method should return the item if it matches, and null otherwise.
-     *                          If the item has a children array, the matcher is expected to filter
-     *                          those itself (be sure to only return the filtered array of children
-     *                          in the returned item and not to modify the children of the item
-     *                          argument).
-     *                placeholder - Placeholder text to display when the element has no focus and
-     *                              no selected items.
-     *                positionDropdown - Function to position the dropdown. Receives two arguments:
-     *                                   $dropdownEl - The element to be positioned.
-     *                                   $selectEl - The element of the Selectivity instance, that
-     *                                               you can position the dropdown to.
-     *                                   The default implementation positions the dropdown element
-     *                                   under the Selectivity's element and gives it the same
-     *                                   width.
-     *                query - Function to use for querying items. Receives a single object as
-     *                        argument with the following properties:
-     *                        callback - Callback to invoke when the results are available. This
-     *                                   callback should be passed a single object as argument with
-     *                                   the following properties:
-     *                                   more - Boolean that can be set to true to indicate there
-     *                                          are more results available. Additional results may
-     *                                          be fetched by the user through pagination.
-     *                                   results - Array of result items. The format for the result
-     *                                             items is the same as for passing local items.
-     *                        offset - This property is only used for pagination and indicates how
-     *                                 many results should be skipped when returning more results.
-     *                        selectivity - The Selectivity instance the query function is used on.
-     *                        term - The search term the user is searching for. Unlike with the
-     *                               matcher function, the term has not been processed using
-     *                               Selectivity.transformText().
-     *                readOnly - If true, disables any modification of the input.
-     *                removeOnly - If true, disables any modification of the input except removing
-     *                             of selected items.
-     *                searchInputListeners - Array of search input listeners. By default, the global
-     *                                       array Selectivity.SearchInputListeners is used.
-     *                showDropdown - Set to false if you don't want to use any dropdown (you can
-     *                               still open it programmatically using open()).
-     *                templates - Object with instance-specific templates to override the global
-     *                            templates assigned to Selectivity.Templates.
-     */
-    setOptions: function(options) {
-
-        options = options || {};
-
-        Selectivity.OptionListeners.forEach(function(listener) {
-            listener(this, options);
-        }.bind(this));
-
-        $.extend(this.options, options);
-
-        var allowedTypes = $.extend({
-            closeOnSelect: 'boolean',
-            dropdown: 'function|null',
-            initSelection: 'function|null',
-            matcher: 'function|null',
-            placeholder: 'string',
-            positionDropdown: 'function|null',
-            query: 'function|null',
-            readOnly: 'boolean',
-            removeOnly: 'boolean',
-            searchInputListeners: 'array'
-        }, options.allowedTypes);
-
-        $.each(options, function(key, value) {
-            var type = allowedTypes[key];
-            if (type && !type.split('|').some(function(type) { return $.type(value) === type; })) {
-                throw new Error(key + ' must be of type ' + type);
-            }
-
-            switch (key) {
-            case 'items':
-                this.items = (value === null ? value : Selectivity.processItems(value));
-                break;
-
-            case 'matcher':
-                this.matcher = value;
-                break;
-
-            case 'searchInputListeners':
-                this.searchInputListeners = value;
-                break;
-
-            case 'templates':
-                $.extend(this.templates, value);
-                break;
-            }
-        }.bind(this));
-
-        this.enabled = (!this.options.readOnly && !this.options.removeOnly);
-    },
-
-    /**
-     * Returns the result of the given template.
-     *
-     * @param templateName Name of the template to process.
-     * @param options Options to pass to the template.
-     *
-     * @return String containing HTML.
-     */
-    template: function(templateName, options) {
-
-        var template = this.templates[templateName];
-        if (template) {
-            if ($.type(template) === 'function') {
-                return template(options);
-            } else if (template.render) {
-                return template.render(options);
-            } else {
-                return template.toString();
-            }
-        } else {
-            throw new Error('Unknown template: ' + templateName);
-        }
-    },
-
-    /**
-     * Triggers the change event.
-     *
-     * The event object at least contains the following property:
-     * value - The new value of the Selectivity instance.
-     *
-     * @param Optional additional options added to the event object.
-     */
-    triggerChange: function(options) {
-
-        this.triggerEvent('change', $.extend({ value: this._value }, options));
-    },
-
-    /**
-     * Triggers an event on the instance's element.
-     *
-     * @param Optional event data to be added to the event object.
-     *
-     * @return Whether the default action of the event may be executed, ie. returns false if
-     *         preventDefault() has been called.
-     */
-    triggerEvent: function(eventName, data) {
-
-        var event = $.Event(eventName, data || {});
-        this.$el.trigger(event);
-        return !event.isDefaultPrevented();
-    },
-
-    /**
-     * Shorthand for value().
-     */
-    val: function(newValue) {
-
-        return this.value(newValue);
-    },
-
-    /**
-     * Validates a single item. Throws an exception if the item is invalid.
-     *
-     * @param item The item to validate.
-     *
-     * @return The validated item. May differ from the input item.
-     */
-    validateItem: function(item) {
-
-        if (item && Selectivity.isValidId(item.id) && $.type(item.text) === 'string') {
-            return item;
-        } else {
-            throw new Error('Item should have id (number or string) and text (string) properties');
-        }
-    },
-
-    /**
-     * Sets or gets the value of the selection.
-     *
-     * The value of the selection only concerns the IDs of the selection items. If you are
-     * interested in the IDs and the text labels, you should use the data() method.
-     *
-     * Note that if neither the items option nor the initSelection option have been set, Selectivity
-     * will have no way to determine what text labels should be used with the given IDs in which
-     * case it will assume the text is equal to the ID. This is useful if you're working with tags,
-     * or selecting e-mail addresses for instance, but may not always be what you want.
-     *
-     * @param newValue Optional new value to set. For a MultipleSelectivity instance the value must
-     *                 be an array of IDs, for a SingleSelectivity instance the value must be a
-     *                 single ID (a string or a number) or null to indicate no item is selected.
-     * @param options Optional options object. May contain the following property:
-     *                triggerChange - Set to false to suppress the "change" event being triggered.
-     *                                Note this will also cause the UI to not update automatically;
-     *                                so you may want to call rerenderSelection() manually when
-     *                                using this option.
-     *
-     * @return If newValue is omitted, this method returns the current value.
-     */
-    value: function(newValue, options) {
-
-        options = options || {};
-
-        if (newValue === undefined) {
-            return this._value;
-        } else {
-            newValue = this.validateValue(newValue);
-
-            this._value = newValue;
-
-            if (this.options.initSelection) {
-                this.options.initSelection(newValue, function(data) {
-                    if (this._value === newValue) {
-                        this._data = this.validateData(data);
-
-                        if (options.triggerChange !== false) {
-                            this.triggerChange();
-                        }
-                    }
-                }.bind(this));
-            } else {
-                this._data = this.getDataForValue(newValue);
-
-                if (options.triggerChange !== false) {
-                    this.triggerChange();
-                }
-            }
-        }
-    },
-
-    /**
-     * @private
-     */
-    _blur: function() {
-
-        if (!this.$el.hasClass('hover')) {
-            this.close();
-        }
-    },
-
-    /**
-     * @private
-     */
-    _closed: function() {
-
-        this.dropdown = null;
-
-        this.$el.toggleClass('open', false);
-    },
-
-    /**
-     * @private
-     */
-    _getItemId: function(elementOrEvent) {
-
-        // returns the item ID related to an element or event target.
-        // IDs can be either numbers or strings, but attribute values are always strings, so we
-        // will have to find out whether the item ID ought to be a number or string ourselves.
-        // $.fn.data() is a bit overzealous for our case, because it returns a number whenever the
-        // attribute value can be parsed as a number. however, it is possible an item had an ID
-        // which is a string but which is parseable as number, in which case we verify if the ID
-        // as number is actually found among the data or results. if it isn't, we assume it was
-        // supposed to be a string after all...
-
-        var $element;
-        if (elementOrEvent.target) {
-            $element = $(elementOrEvent.target).closest('[data-item-id]');
-        } else if (elementOrEvent.length) {
-            $element = elementOrEvent;
-        } else {
-            $element = $(elementOrEvent);
-        }
-
-        var id = $element.data('item-id');
-        if ($.type(id) === 'string') {
-            return id;
-        } else {
-            if (Selectivity.findById(this._data || [], id)) {
-                return id;
-            } else {
-                var dropdown = this.dropdown;
-                while (dropdown) {
-                    if (Selectivity.findNestedById(dropdown.results, id)) {
-                        return id;
-                    }
-                    // FIXME: reference to submenu doesn't belong in base module
-                    dropdown = dropdown.submenu;
-                }
-                return '' + id;
-            }
-        }
-    },
-
-    /**
-     * @private
-     */
-    _mouseleave: function() {
-
-        this.$el.toggleClass('hover', false);
-    },
-
-    /**
-     * @private
-     */
-    _mouseenter: function() {
-
-        this.$el.toggleClass('hover', true);
-    }
-
-});
-
-/**
- * Dropdown class to use for displaying dropdowns.
- *
- * The default implementation of a dropdown is defined in the selectivity-dropdown module.
- */
-Selectivity.Dropdown = null;
-
-/**
- * Mapping of input types.
- */
-Selectivity.InputTypes = {};
-
-/**
- * Array of option listeners.
- *
- * Option listeners are invoked when setOptions() is called. Every listener receives two arguments:
- *
- * selectivity - The Selectivity instance.
- * options - The options that are about to be set. The listener may modify this options object.
- *
- * An example of an option listener is the selectivity-traditional module.
- */
-Selectivity.OptionListeners = [];
-
-/**
- * Array of search input listeners.
- *
- * Search input listeners are invoked when initSearchInput() is called (typically right after the
- * search input is created). Every listener receives two arguments:
- *
- * selectivity - The Selectivity instance.
- * $input - jQuery container with the search input.
- *
- * An example of a search input listener is the selectivity-keyboard module.
- */
-Selectivity.SearchInputListeners = [];
-
-/**
- * Mapping with templates to use for rendering select boxes and dropdowns. See
- * selectivity-templates.js for a useful set of default templates, as well as for documentation of
- * the individual templates.
- */
-Selectivity.Templates = {};
-
-/**
- * Finds an item in the given array with the specified ID.
- *
- * @param array Array to search in.
- * @param id ID to search for.
- *
- * @return The item in the array with the given ID, or null if the item was not found.
- */
-Selectivity.findById = function(array, id) {
-
-    var index = Selectivity.findIndexById(array, id);
-    return (index > -1 ? array[index] : null);
-};
-
-/**
- * Finds the index of an item in the given array with the specified ID.
- *
- * @param array Array to search in.
- * @param id ID to search for.
- *
- * @return The index of the item in the array with the given ID, or -1 if the item was not found.
- */
-Selectivity.findIndexById = function(array, id) {
-
-    for (var i = 0, length = array.length; i < length; i++) {
-        if (array[i].id === id) {
-            return i;
-        }
-    }
-    return -1;
-};
-
-/**
- * Finds an item in the given array with the specified ID. Items in the array may contain 'children'
- * properties which in turn will be searched for the item.
- *
- * @param array Array to search in.
- * @param id ID to search for.
- *
- * @return The item in the array with the given ID, or null if the item was not found.
- */
-Selectivity.findNestedById =  null && function(array, id) {
-
-    for (var i = 0, length = array.length; i < length; i++) {
-        var item = array[i];
-        if (item.id === id) {
-            return item;
-        } else if (item.children) {
-            var result = Selectivity.findNestedById(item.children, id);
-            if (result) {
-                return result;
-            }
-        }
-    }
-    return null;
-};
-
-/**
- * Utility method for inheriting another class.
- *
- * @param SubClass Constructor function of the subclass.
- * @param SuperClass Optional constructor function of the superclass. If omitted, Selectivity is
- *                   used as superclass.
- * @param prototype Object with methods you want to add to the subclass prototype.
- *
- * @return A utility function for calling the methods of the superclass. This function receives two
- *         arguments: The this object on which you want to execute the method and the name of the
- *         method. Any arguments past those are passed to the superclass method.
- */
-Selectivity.inherits = function(SubClass, SuperClass, prototype) {
-
-    if (arguments.length === 2) {
-        prototype = SuperClass;
-        SuperClass = Selectivity;
-    }
-
-    SubClass.prototype = $.extend(
-        Object.create(SuperClass.prototype),
-        { constructor: SubClass },
-        prototype
-    );
-
-    return function(self, methodName) {
-        SuperClass.prototype[methodName].apply(self, Array.prototype.slice.call(arguments, 2));
-    };
-};
-
-/**
- * Checks whether a value can be used as a valid ID for selection items. Only numbers and strings
- * are accepted to be used as IDs.
- *
- * @param id The value to check whether it is a valid ID.
- *
- * @return true if the value is a valid ID, false otherwise.
- */
-Selectivity.isValidId = function(id) {
-
-    var type = $.type(id);
-    return type === 'number' || type === 'string';
-};
-
-/**
- * Decides whether a given item matches a search term. The default implementation simply
- * checks whether the term is contained within the item's text, after transforming them using
- * transformText().
- *
- * @param item The item that should match the search term.
- * @param term The search term. Note that for performance reasons, the term has always been already
- *             processed using transformText().
- *
- * @return true if the text matches the term, false otherwise.
- */
-Selectivity.matcher = function(item, term) {
-
-    var result = null;
-    if (Selectivity.transformText(item.text).indexOf(term) > -1) {
-        result = item;
-    } else if (item.children) {
-        var matchingChildren = item.children.map(function(child) {
-            return Selectivity.matcher(child, term);
-        }).filter(function(child) {
-            return !!child;
-        });
-        if (matchingChildren.length) {
-            result = { id: item.id, text: item.text, children: matchingChildren };
-        }
-    }
-    return result;
-};
-
-/**
- * Helper function for processing items.
- *
- * @param item The item to process, either as object containing 'id' and 'text' properties or just
- *             as ID. The 'id' property of an item is optional if it has a 'children' property
- *             containing an array of items.
- *
- * @return Object containing 'id' and 'text' properties.
- */
-Selectivity.processItem = function(item) {
-
-    if (Selectivity.isValidId(item)) {
-        return { id: item, text: '' + item };
-    } else if (item &&
-               (Selectivity.isValidId(item.id) || item.children) &&
-               $.type(item.text) === 'string') {
-        if (item.children) {
-            item.children = Selectivity.processItems(item.children);
-        }
-
-        return item;
-    } else {
-        throw new Error('invalid item');
-    }
-};
-
-/**
- * Helper function for processing an array of items.
- *
- * @param items Array of items to process. See processItem() for details about a single item.
- *
- * @return Array with items.
- */
-Selectivity.processItems = function(items) {
-
-    if ($.type(items) === 'array') {
-        return items.map(Selectivity.processItem);
-    } else {
-        throw new Error('invalid items');
-    }
-};
-
-/**
- * Quotes a string so it can be used in a CSS attribute selector. It adds double quotes to the
- * string and escapes all occurrences of the quote character inside the string.
- *
- * @param string The string to quote.
- *
- * @return The quoted string.
- */
-Selectivity.quoteCssAttr = function(string) {
-
-    return '"' + ('' + string).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
-};
-
-/**
- * Transforms text in order to find matches. The default implementation casts all strings to
- * lower-case so that any matches found will be case-insensitive.
- *
- * @param string The string to transform.
- *
- * @return The transformed string.
- */
-Selectivity.transformText = function(string) {
-
-    return string.toLowerCase();
-};
-
-module.exports = $.fn.selectivity = Selectivity;
-
-},{"14":14,"jquery":"jquery"}],18:[function(_dereq_,module,exports){
-_dereq_(15);_dereq_(16);_dereq_(19);_dereq_(20);_dereq_(21);_dereq_(22);_dereq_(23);_dereq_(24);_dereq_(25);_dereq_(26);_dereq_(27);_dereq_(28);_dereq_(29);module.exports=_dereq_(17);
-},{"15":15,"16":16,"17":17,"19":19,"20":20,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29}],19:[function(_dereq_,module,exports){
+},{"35":35}],27:[function(_dereq_,module,exports){
 'use strict';
 
 var DIACRITICS = {
@@ -2616,7 +3433,7 @@ var DIACRITICS = {
     '\u03C2': '\u03C3'
 };
 
-var Selectivity = _dereq_(17);
+var Selectivity = _dereq_(35);
 var previousTransform = Selectivity.transformText;
 
 /**
@@ -2635,806 +3452,143 @@ Selectivity.transformText = function(string) {
     return previousTransform(result);
 };
 
-},{"17":17}],20:[function(_dereq_,module,exports){
+},{"35":35}],28:[function(_dereq_,module,exports){
 'use strict';
 
-var $ = window.jQuery || window.Zepto;
-var debounce = _dereq_(5);
+var $ = (window.jQuery || window.Zepto);
 
-var EventDelegator = _dereq_(14);
-
-var Selectivity = _dereq_(17);
-
-var SCROLL_EVENTS = ['scroll', 'touchend', 'touchmove'];
+var Selectivity = _dereq_(35);
 
 /**
- * selectivity Dropdown Constructor.
- *
- * @param options Options object. Should have the following properties:
- *                selectivity - Selectivity instance to show the dropdown for.
- *                showSearchInput - Boolean whether a search input should be shown.
+ * Option listener that implements a convenience query function for performing AJAX requests.
  */
-function SelectivityDropdown(options) {
-
-    var selectivity = options.selectivity;
-
-    this.$el = $(selectivity.template('dropdown', {
-        dropdownCssClass: selectivity.options.dropdownCssClass,
-        searchInputPlaceholder: selectivity.options.searchInputPlaceholder,
-        showSearchInput: options.showSearchInput
-    }));
-
-    /**
-     * jQuery container to add the results to.
-     */
-    this.$results = this.$('.selectivity-results-container');
-
-    /**
-     * Boolean indicating whether more results are available than currently displayed in the
-     * dropdown.
-     */
-    this.hasMore = false;
-
-    /**
-     * The currently highlighted result item.
-     */
-    this.highlightedResult = null;
-
-    /**
-     * Boolean whether the load more link is currently highlighted.
-     */
-    this.loadMoreHighlighted = false;
-
-    /**
-     * Options passed to the dropdown constructor.
-     */
-    this.options = options;
-
-    /**
-     * The results displayed in the dropdown.
-     */
-    this.results = [];
-
-    /**
-     * Selectivity instance.
-     */
-    this.selectivity = selectivity;
-
-    this._closed = false;
-
-    this.close = this.close.bind(this);
-    this.position = this.position.bind(this);
-
-    if (selectivity.options.closeOnSelect !== false) {
-        selectivity.$el.on('selectivity-selecting', this.close);
-    }
-
-    this._lastMousePosition = {};
-
-    this.addToDom();
-    this.position();
-
-    this._suppressMouseWheel();
-
-    if (options.showSearchInput) {
-        selectivity.initSearchInput(this.$('.selectivity-search-input'));
-        selectivity.focus();
-    }
-
-    EventDelegator.call(this);
-
-    this.$results.on(SCROLL_EVENTS.join(' '), debounce(this._scrolled.bind(this), 50));
-
-    this._attachAncestorScrollListeners();
-
-    this.showLoading();
-
-    setTimeout(this.triggerOpen.bind(this), 1);
-}
-
-/**
- * Methods.
- */
-$.extend(SelectivityDropdown.prototype, EventDelegator.prototype, {
-
-    /**
-     * Convenience shortcut for this.$el.find(selector).
-     */
-    $: function(selector) {
-
-        return this.$el.find(selector);
-    },
-
-    /**
-     * Adds the dropdown to the DOM.
-     */
-    addToDom: function() {
-
-        var $next;
-        var $anchor = this.selectivity.$el;
-        while (($next = $anchor.next('.selectivity-dropdown')).length) {
-            $anchor = $next;
-        }
-
-        $anchor.append(this.$el);
-    },
-
-    /**
-     * Closes the dropdown.
-     */
-    close: function() {
-
-        if (!this._closed) {
-            this._closed = true;
-
-            this.$el.remove();
-
-            this.selectivity.$el.off('selectivity-selecting', this.close);
-
-            this.triggerClose();
-
-            this._removeAncestorScrollListeners();
-        }
-    },
-
-    /**
-     * Events map.
-     *
-     * Follows the same format as Backbone: http://backbonejs.org/#View-delegateEvents
-     */
-    events: {
-        'click .selectivity-load-more': '_loadMoreClicked',
-        'click .selectivity-result-item': '_resultClicked',
-        'mouseenter .selectivity-load-more': '_loadMoreHovered',
-        'mouseenter .selectivity-result-item': '_resultHovered'
-    },
-
-    /**
-     * Highlights a result item.
-     *
-     * @param item The item to highlight.
-     */
-    highlight: function(item) {
-
-        if (this.loadMoreHighlighted) {
-            this.$('.selectivity-load-more').removeClass('highlight');
-        }
-
-        this.$('.selectivity-result-item').removeClass('highlight')
-            .filter('[data-item-id=' + Selectivity.quoteCssAttr(item.id) + ']')
-            .addClass('highlight');
-
-        this.highlightedResult = item;
-        this.loadMoreHighlighted = false;
-
-        this.selectivity.triggerEvent('selectivity-highlight', { item: item, id: item.id });
-    },
-
-    /**
-     * Highlights the load more link.
-     *
-     * @param item The item to highlight.
-     */
-    highlightLoadMore: function() {
-
-        this.$('.selectivity-result-item').removeClass('highlight');
-
-        this.$('.selectivity-load-more').addClass('highlight');
-
-        this.highlightedResult = null;
-        this.loadMoreHighlighted = true;
-    },
-
-    /**
-     * Loads a follow-up page with results after a search.
-     *
-     * This method should only be called after a call to search() when the callback has indicated
-     * more results are available.
-     */
-    loadMore: function() {
-
-        this.options.query({
-            callback: function(response) {
-                if (response && response.results) {
-                    this._showResults(
-                        Selectivity.processItems(response.results),
-                        { add: true, hasMore: !!response.more }
-                    );
-                } else {
-                    throw new Error('callback must be passed a response object');
-                }
-            }.bind(this),
-            error: this._showResults.bind(this, [], { add: true }),
-            offset: this.results.length,
-            selectivity: this.selectivity,
-            term: this.term
-        });
-    },
-
-    /**
-     * Positions the dropdown inside the DOM.
-     */
-    position: function() {
-
-        var position = this.options.position;
-        if (position) {
-            position(this.$el, this.selectivity.$el);
-        }
-
-        this._scrolled();
-    },
-
-    /**
-     * Renders an array of result items.
-     *
-     * @param items Array of result items.
-     *
-     * @return HTML-formatted string to display the result items.
-     */
-    renderItems: function(items) {
-
-        var selectivity = this.selectivity;
-        return items.map(function(item) {
-            var result = selectivity.template(item.id ? 'resultItem' : 'resultLabel', item);
-            if (item.children) {
-                result += selectivity.template('resultChildren', {
-                    childrenHtml: this.renderItems(item.children)
-                });
-            }
-            return result;
-        }, this).join('');
-    },
-
-    /**
-     * Searches for results based on the term given or the term entered in the search input.
-     *
-     * If an items array has been passed with the options to the Selectivity instance, a local
-     * search will be performed among those items. Otherwise, the query function specified in the
-     * options will be used to perform the search. If neither is defined, nothing happens.
-     *
-     * @param term Term to search for.
-     */
-    search: function(term) {
-
-        var self = this;
-
-        term = term || '';
-        self.term = term;
-
-        if (self.options.items) {
-            term = Selectivity.transformText(term);
-            var matcher = self.selectivity.matcher;
-            self._showResults(self.options.items.map(function(item) {
-                return matcher(item, term);
-            }).filter(function(item) {
-                return !!item;
-            }), { term: term });
-        } else if (self.options.query) {
-            self.options.query({
-                callback: function(response) {
-                    if (response && response.results) {
-                        self._showResults(
-                            Selectivity.processItems(response.results),
-                            { hasMore: !!response.more, term: term }
-                        );
-                    } else {
-                        throw new Error('callback must be passed a response object');
-                    }
-                },
-                error: self.showError.bind(self),
-                offset: 0,
-                selectivity: self.selectivity,
-                term: term
-            });
-        }
-    },
-
-    /**
-     * Selects the highlighted item.
-     */
-    selectHighlight: function() {
-
-        if (this.highlightedResult) {
-            this.selectItem(this.highlightedResult.id);
-        } else if (this.loadMoreHighlighted) {
-            this._loadMoreClicked();
-        }
-    },
-
-    /**
-     * Selects the item with the given ID.
-     *
-     * @param id ID of the item to select.
-     */
-    selectItem: function(id) {
-
-        var item = Selectivity.findNestedById(this.results, id);
-        if (item && !item.disabled) {
-            var options = { id: id, item: item };
-            if (this.selectivity.triggerEvent('selectivity-selecting', options)) {
-                this.selectivity.triggerEvent('selectivity-selected', options);
-            }
-        }
-    },
-
-    /**
-     * Shows an error message.
-     *
-     * @param message Error message to display.
-     * @param options Options object. May contain the following property:
-     *                escape - Set to false to disable HTML-escaping of the message. Useful if you
-     *                         want to set raw HTML as the message, but may open you up to XSS
-     *                         attacks if you're not careful with escaping user input.
-     */
-    showError: function(message, options) {
-
-        options = options || {};
-
-        this.$results.html(this.selectivity.template('error', {
-            escape: options.escape !== false,
-            message: message
-        }));
-
-        this.hasMore = false;
-        this.results = [];
-
-        this.highlightedResult = null;
-        this.loadMoreHighlighted = false;
-
-        this.position();
-    },
-
-    /**
-     * Shows a loading indicator in the dropdown.
-     */
-    showLoading: function() {
-
-        this.$results.html(this.selectivity.template('loading'));
-
-        this.hasMore = false;
-        this.results = [];
-
-        this.highlightedResult = null;
-        this.loadMoreHighlighted = false;
-
-        this.position();
-    },
-
-    /**
-     * Shows the results from a search query.
-     *
-     * @param results Array of result items.
-     * @param options Options object. May contain the following properties:
-     *                add - True if the results should be added to any already shown results.
-     *                hasMore - Boolean whether more results can be fetched using the query()
-     *                          function.
-     *                term - The search term for which the results are displayed.
-     */
-    showResults: function(results, options) {
-
-        var resultsHtml = this.renderItems(results);
-        if (options.hasMore) {
-            resultsHtml += this.selectivity.template('loadMore');
-        } else {
-            if (!resultsHtml && !options.add) {
-                resultsHtml = this.selectivity.template('noResults', { term: options.term });
-            }
-        }
-
-        if (options.add) {
-            this.$('.selectivity-loading').replaceWith(resultsHtml);
-
-            this.results = this.results.concat(results);
-        } else {
-            this.$results.html(resultsHtml);
-
-            this.results = results;
-        }
-
-        this.hasMore = options.hasMore;
-
-        var value = this.selectivity.value();
-        if (value && $.type(value) !== 'array') {
-            var item = Selectivity.findNestedById(results, value);
-            if (item) {
-                this.highlight(item);
-            }
-        } else if (!options.add || this.loadMoreHighlighted) {
-            this._highlightFirstItem(results);
-        }
-
-        this.position();
-    },
-
-    /**
-     * Triggers the 'selectivity-close' event.
-     */
-    triggerClose: function() {
-
-        this.selectivity.$el.trigger('selectivity-close');
-    },
-
-    /**
-     * Triggers the 'selectivity-open' event.
-     */
-    triggerOpen: function() {
-
-        this.selectivity.$el.trigger('selectivity-open');
-    },
-
-    /**
-     * @private
-     */
-    _attachAncestorScrollListeners: function() {
-
-        var position = this.position;
-        var scrollElements = [];
-
-        function attach(el) {
-            for (var i = 0; i < SCROLL_EVENTS.length; i++) {
-                el.addEventListener(SCROLL_EVENTS[i], position);
-            }
-            scrollElements.push(el);
-        }
-
-        if (typeof window !== 'undefined') {
-            var el = this.selectivity.$el[0];
-            while ((el = el.parentElement)) {
-                var style = window.getComputedStyle(el);
-                if (style.overflowX === 'auto' || style.overflowX === 'scroll' ||
-                    style.overflowY === 'auto' || style.overflowY === 'scroll') {
-                    attach(el);
-                }
-            }
-
-            attach(window);
-        }
-
-        this._ancestorScrollElements = scrollElements;
-    },
-
-    /**
-     * @private
-     */
-    _highlightFirstItem: function(results) {
-
-        function findFirstItem(results) {
-            for (var i = 0, length = results.length; i < length; i++) {
-                var result = results[i];
-                if (result.id) {
+Selectivity.OptionListeners.unshift(function(selectivity, options) {
+
+    var ajax = options.ajax;
+    if (ajax && ajax.url && !ajax.fetch && $.Deferred) {
+        ajax.fetch = function(url, init) {
+            return $.ajax(url, {
+                cache: (init.cache !== 'no-cache'),
+                headers: init.headers || null,
+                method: init.method || 'GET',
+                xhrFields: (init.credentials === 'include' ? { withCredentials: true } : null)
+            }).then(function(data) {
+                return { results: $.map(data, function(result) {
                     return result;
-                } else if (result.children) {
-                    var item = findFirstItem(result.children);
-                    if (item) {
-                        return item;
-                    }
+                }), more: false };
+            }, function(jqXHR, textStatus, errorThrown) {
+                throw new Error('AJAX request returned: ' + textStatus +
+                                (errorThrown ? ', ' + errorThrown : ''));
+            });
+        };
+    }
+});
+
+},{"35":35,"jquery":"jquery"}],29:[function(_dereq_,module,exports){
+'use strict';
+
+var $ = (window.jQuery || window.Zepto);
+
+var Selectivity = _dereq_(35);
+
+function createSelectivityNextToSelectElement($el, options) {
+
+    var data = (options.multiple ? [] : null);
+
+    var mapOptions = function() {
+        var $this = $(this);
+        if ($this.is('option')) {
+            var text = $this.text();
+            var id = $this.attr('value');
+            if (id === undefined) {
+                id = text;
+            }
+            if ($this.prop('selected')) {
+                var item = { id: id, text: text };
+                if (options.multiple) {
+                    data.push(item);
+                } else {
+                    data = item;
                 }
             }
-        }
 
-        var firstItem = findFirstItem(results);
-        if (firstItem) {
-            this.highlight(firstItem);
+            return {
+                id: id,
+                text: $this.attr('label') || text
+            };
         } else {
-            this.highlightedResult = null;
-            this.loadMoreHighlighted = false;
+            return {
+                text: $this.attr('label'),
+                children: $this.children('option,optgroup').map(mapOptions).get()
+            };
         }
-    },
+    };
 
-    /**
-     * @private
-     */
-    _loadMoreClicked: function() {
+    options.allowClear = ('allowClear' in options ? options.allowClear : !$el.prop('required'));
 
-        this.$('.selectivity-load-more').replaceWith(this.selectivity.template('loading'));
+    var items = $el.children('option,optgroup').map(mapOptions).get();
+    options.data = data;
 
-        this.loadMore();
+    options.items = (options.query ? null : items);
 
-        return false;
-    },
+    options.placeholder = options.placeholder || $el.data('placeholder') || '';
 
-    /**
-     * @private
-     */
-    _loadMoreHovered: function(event) {
+    options.tabIndex = (options.tabIndex === undefined ? $el.attr('tabindex') || 0
+                                                       : options.tabIndex);
 
-        if (event.screenX === undefined || event.screenX !== this._lastMousePosition.x ||
-            event.screenY === undefined || event.screenY !== this._lastMousePosition.y) {
-            this.highlightLoadMore();
-
-            this._recordMousePosition(event);
-        }
-    },
-
-    /**
-     * @private
-     */
-    _recordMousePosition: function(event) {
-
-        this._lastMousePosition = { x: event.screenX, y: event.screenY };
-    },
-
-    /**
-     * @private
-     */
-    _removeAncestorScrollListeners: function() {
-
-        this._ancestorScrollElements.forEach(function(el) {
-            for (var i = 0; i < SCROLL_EVENTS.length; i++) {
-                el.removeEventListener(SCROLL_EVENTS[i], this.position);
-            }
-        }, this);
-
-        this._ancestorScrollElements = [];
-    },
-
-    /**
-     * @private
-     */
-    _resultClicked: function(event) {
-
-        this.selectItem(this.selectivity._getItemId(event));
-
-        return false;
-    },
-
-    /**
-     * @private
-     */
-    _resultHovered: function(event) {
-
-        if (event.screenX === undefined || event.screenX !== this._lastMousePosition.x ||
-            event.screenY === undefined || event.screenY !== this._lastMousePosition.y) {
-            var id = this.selectivity._getItemId(event);
-            var item = Selectivity.findNestedById(this.results, id);
-            if (item && !item.disabled) {
-                this.highlight(item);
-            }
-
-            this._recordMousePosition(event);
-        }
-    },
-
-    /**
-     * @private
-     */
-    _scrolled: function() {
-
-        var $loadMore = this.$('.selectivity-load-more');
-        if ($loadMore.length) {
-            if ($loadMore[0].offsetTop - this.$results[0].scrollTop < this.$el.height()) {
-                this._loadMoreClicked();
-            }
-        }
-    },
-
-    /**
-     * @private
-     */
-    _showResults: function(results, options) {
-
-        this.showResults(this.selectivity.filterResults(results), options);
-    },
-
-    /**
-     * @private
-     */
-    _suppressMouseWheel: function() {
-
-        var suppressMouseWheelSelector = this.selectivity.options.suppressMouseWheelSelector;
-        if (suppressMouseWheelSelector === null) {
-            return;
-        }
-
-        var selector = suppressMouseWheelSelector || '.selectivity-results-container';
-        this.$el.on('DOMMouseScroll mousewheel', selector, function(event) {
-
-            // Thanks to Troy Alford:
-            // http://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element
-
-            var $el = $(this),
-                scrollTop = this.scrollTop,
-                scrollHeight = this.scrollHeight,
-                height = $el.height(),
-                originalEvent = event.originalEvent,
-                delta = (event.type === 'DOMMouseScroll' ? originalEvent.detail * -40
-                                                         : originalEvent.wheelDelta),
-                up = delta > 0;
-
-            function prevent() {
-                event.stopPropagation();
-                event.preventDefault();
-                event.returnValue = false;
-                return false;
-            }
-
-            if (scrollHeight > height) {
-                if (!up && -delta > scrollHeight - height - scrollTop) {
-                    // Scrolling down, but this will take us past the bottom.
-                    $el.scrollTop(scrollHeight);
-                    return prevent();
-                } else if (up && delta > scrollTop) {
-                    // Scrolling up, but this will take us past the top.
-                    $el.scrollTop(0);
-                    return prevent();
-                }
-            }
-        });
+    var classes = ($el.attr('class') || 'selectivity-input').split(' ');
+    if (classes.indexOf('selectivity-input') < 0) {
+        classes.push('selectivity-input');
     }
 
-});
-
-module.exports = Selectivity.Dropdown = SelectivityDropdown;
-
-},{"14":14,"17":17,"5":5,"jquery":"jquery"}],21:[function(_dereq_,module,exports){
-'use strict';
-
-var $ = window.jQuery || window.Zepto;
-
-var Selectivity = _dereq_(17);
-var MultipleSelectivity = _dereq_(24);
-
-function isValidEmail(email) {
-
-    var atIndex = email.indexOf('@');
-    var dotIndex = email.lastIndexOf('.');
-    var spaceIndex = email.indexOf(' ');
-    return (atIndex > 0 && dotIndex > atIndex + 1 &&
-            dotIndex < email.length - 2 && spaceIndex === -1);
+    var $div = $('<div>').attr({
+        'id': 's9y_' + $el.attr('id'),
+        'class': classes.join(' '),
+        'style': $el.attr('style'),
+        'data-name': $el.attr('name')
+    });
+    $div.insertAfter($el);
+    $el.hide();
+    return $div[0];
 }
 
-function lastWord(token, length) {
-
-    length = (length === undefined ? token.length : length);
-    for (var i = length - 1; i >= 0; i--) {
-        if ((/\s/).test(token[i])) {
-            return token.slice(i + 1, length);
-        }
-    }
-    return token.slice(0, length);
-}
-
-function stripEnclosure(token, enclosure) {
-
-    if (token.slice(0, 1) === enclosure[0] && token.slice(-1) === enclosure[1]) {
-        return token.slice(1, -1).trim();
-    } else {
-        return token.trim();
-    }
-}
-
-function createEmailItem(token) {
-
-    var email = lastWord(token);
-    var name = token.slice(0, -email.length).trim();
-    if (isValidEmail(email)) {
-        email = stripEnclosure(stripEnclosure(email, '()'), '<>');
-        name = stripEnclosure(name, '""').trim() || email;
-        return { id: email, text: name };
-    } else {
-        return (token.trim() ? { id: token, text: token } : null);
-    }
-}
-
-function emailTokenizer(input, selection, createToken) {
-
-    function hasToken(input) {
-        if (input) {
-            for (var i = 0, length = input.length; i < length; i++) {
-                switch (input[i]) {
-                case ';':
-                case ',':
-                case '\n':
-                    return true;
-                case ' ':
-                case '\t':
-                    if (isValidEmail(lastWord(input, i))) {
-                        return true;
-                    }
-                    break;
-                case '"':
-                    do { i++; } while (i < length && input[i] !== '"');
-                    break;
-                default:
-                    continue;
-                }
-            }
-        }
-        return false;
-    }
-
-    function takeToken(input) {
-        for (var i = 0, length = input.length; i < length; i++) {
-            switch (input[i]) {
-            case ';':
-            case ',':
-            case '\n':
-                return { term: input.slice(0, i), input: input.slice(i + 1) };
-            case ' ':
-            case '\t':
-                if (isValidEmail(lastWord(input, i))) {
-                    return { term: input.slice(0, i), input: input.slice(i + 1) };
-                }
-                break;
-            case '"':
-                do { i++; } while (i < length && input[i] !== '"');
-                break;
-            default:
-                continue;
-            }
-        }
-        return {};
-    }
-
-    while (hasToken(input)) {
-        var token = takeToken(input);
-        if (token.term) {
-            var item = createEmailItem(token.term);
-            if (item && !(item.id && Selectivity.findById(selection, item.id))) {
-                createToken(item);
-            }
-        }
-        input = token.input;
-    }
-
-    return input;
+function bindTraditionalSelectEvents(selectivity) {
+    var $el = $(selectivity.el);
+    $el.on('change', function(event) {
+        var value = event.originalEvent.value;
+        $el.prev('select').val($.type(value) === 'array' ? value.slice(0) : value).trigger(event);
+    });
 }
 
 /**
- * Emailselectivity Constructor.
- *
- * @param options Options object. Accepts all options from the MultipleSelectivity Constructor.
+ * Option listener providing support for converting traditional <select> boxes into Selectivity
+ * instances.
  */
-function Emailselectivity(options) {
+Selectivity.OptionListeners.push(function(selectivity, options) {
 
-    MultipleSelectivity.call(this, options);
-}
+    var $el = $(selectivity.el);
+    if ($el.is('select')) {
+        if ($el.attr('autofocus')) {
+            setTimeout(function() {
+                selectivity.focus();
+            }, 1);
+        }
 
-/**
- * Methods.
- */
-var callSuper = Selectivity.inherits(Emailselectivity, MultipleSelectivity, {
+        selectivity.el = createSelectivityNextToSelectElement($el, options);
+        selectivity.el.selectivity = selectivity;
 
-    /**
-     * @inherit
-     */
-    initSearchInput: function($input) {
+        Selectivity.patchEvents($el);
 
-        callSuper(this, 'initSearchInput', $input);
-
-        $input.on('blur', function() {
-            var term = $input.val();
-            if (isValidEmail(lastWord(term))) {
-                this.add(createEmailItem(term));
-            }
-        }.bind(this));
-    },
-
-    /**
-     * @inherit
-     *
-     * Note that for the Email input type the option showDropdown is set to false and the tokenizer
-     * option is set to a tokenizer specialized for email addresses.
-     */
-    setOptions: function(options) {
-
-        options = $.extend({
-            createTokenItem: createEmailItem,
-            showDropdown: false,
-            tokenizer: emailTokenizer
-        }, options);
-
-        callSuper(this, 'setOptions', options);
+        bindTraditionalSelectEvents(selectivity);
     }
-
 });
 
-module.exports = Selectivity.InputTypes.Email = Emailselectivity;
-
-},{"17":17,"24":24,"jquery":"jquery"}],22:[function(_dereq_,module,exports){
+},{"35":35,"jquery":"jquery"}],30:[function(_dereq_,module,exports){
 'use strict';
 
-var Selectivity = _dereq_(17);
+var Selectivity = _dereq_(35);
+var findResultItem = _dereq_(37);
+var getKeyCode = _dereq_(39);
 
 var KEY_BACKSPACE = 8;
 var KEY_DOWN_ARROW = 40;
@@ -3446,7 +3600,7 @@ var KEY_UP_ARROW = 38;
 /**
  * Search input listener providing keyboard support for navigating the dropdown.
  */
-function listener(selectivity, $input) {
+function listener(selectivity, input) {
 
     var keydownCanceled = false;
     var closeSubmenu = null;
@@ -3458,37 +3612,23 @@ function listener(selectivity, $input) {
      */
     function moveHighlight(dropdown, delta) {
 
-        function findElementIndex($elements, selector) {
-            for (var i = 0, length = $elements.length; i < length; i++) {
-                if ($elements.eq(i).is(selector)) {
-                    return i;
-                }
-            }
-            return -1;
+        var results = dropdown.results;
+        if (!results.length) {
+            return;
         }
 
+        var resultItems = [].slice.call(dropdown.el.querySelectorAll('.selectivity-result-item'));
+
         function scrollToHighlight() {
-            var $el;
+            var el;
             if (dropdown.highlightedResult) {
-                var quotedId = Selectivity.quoteCssAttr(dropdown.highlightedResult.id);
-                $el = dropdown.$('.selectivity-result-item[data-item-id=' + quotedId + ']');
+                el = findResultItem(resultItems, dropdown.highlightedResult.id);
             } else if (dropdown.loadMoreHighlighted) {
-                $el = dropdown.$('.selectivity-load-more');
-            } else {
-                return; // no highlight to scroll to
+                el = dropdown.$('.selectivity-load-more');
             }
 
-            var position = $el.position();
-            if (!position) {
-                return;
-            }
-
-            var top = position.top;
-            var resultsHeight = dropdown.$results.height();
-            var elHeight = ($el.outerHeight ? $el.outerHeight() : $el.height());
-            if (top < 0 || top > resultsHeight - elHeight) {
-                top += dropdown.$results.scrollTop();
-                dropdown.$results.scrollTop(delta < 0 ? top : top - resultsHeight + elHeight);
+            if (el) {
+                el.scrollIntoView(delta < 0);
             }
         }
 
@@ -3497,32 +3637,28 @@ function listener(selectivity, $input) {
             return;
         }
 
-        var results = dropdown.results;
-        if (results.length) {
-            var $results = dropdown.$('.selectivity-result-item');
-            var defaultIndex = (delta > 0 ? 0 : $results.length - 1);
-            var index = defaultIndex;
-            var highlightedResult = dropdown.highlightedResult;
-            if (highlightedResult) {
-                var quotedId = Selectivity.quoteCssAttr(highlightedResult.id);
-                index = findElementIndex($results, '[data-item-id=' + quotedId + ']') + delta;
-                if (delta > 0 ? index >= $results.length : index < 0) {
-                    if (dropdown.hasMore) {
-                        dropdown.highlightLoadMore();
-                        scrollToHighlight();
-                        return;
-                    } else {
-                        index = defaultIndex;
-                    }
+        var defaultIndex = (delta > 0 ? 0 : resultItems.length - 1);
+        var index = defaultIndex;
+        var highlightedResult = dropdown.highlightedResult;
+        if (highlightedResult) {
+            var highlightedResultItem = findResultItem(resultItems, highlightedResult.id);
+            index = resultItems.indexOf(highlightedResultItem) + delta;
+            if (delta > 0 ? index >= resultItems.length : index < 0) {
+                if (dropdown.hasMore) {
+                    dropdown.highlightLoadMore();
+                    scrollToHighlight();
+                    return;
+                } else {
+                    index = defaultIndex;
                 }
             }
+        }
 
-            var result = Selectivity.findNestedById(results,
-                                                    selectivity._getItemId($results[index]));
-            if (result) {
-                dropdown.highlight(result, { delay: !!result.submenu });
-                scrollToHighlight();
-            }
+        var resultItem = resultItems[index];
+        var result = Selectivity.findNestedById(results, selectivity.getRelatedItemId(resultItem));
+        if (result) {
+            dropdown.highlight(result, { delay: !!result.submenu });
+            scrollToHighlight();
         }
     }
 
@@ -3530,8 +3666,9 @@ function listener(selectivity, $input) {
 
         var dropdown = selectivity.dropdown;
         if (dropdown) {
-            if (event.keyCode === KEY_BACKSPACE) {
-                if (!$input.val()) {
+            var keyCode = getKeyCode(event);
+            if (keyCode === KEY_BACKSPACE) {
+                if (!input.value) {
                     if (dropdown.submenu) {
                         var submenu = dropdown.submenu;
                         while (submenu.submenu) {
@@ -3543,15 +3680,15 @@ function listener(selectivity, $input) {
                     event.preventDefault();
                     keydownCanceled = true;
                 }
-            } else if (event.keyCode === KEY_DOWN_ARROW) {
+            } else if (keyCode === KEY_DOWN_ARROW) {
                 moveHighlight(dropdown, 1);
-            } else if (event.keyCode === KEY_UP_ARROW) {
+            } else if (keyCode === KEY_UP_ARROW) {
                 moveHighlight(dropdown, -1);
-            } else if (event.keyCode === KEY_TAB) {
+            } else if (keyCode === KEY_TAB) {
                 setTimeout(function() {
                     selectivity.close();
                 }, 1);
-            } else if (event.keyCode === KEY_ENTER) {
+            } else if (keyCode === KEY_ENTER) {
                 event.preventDefault(); // don't submit forms on keydown
             }
         }
@@ -3566,6 +3703,7 @@ function listener(selectivity, $input) {
         }
 
         var dropdown = selectivity.dropdown;
+        var keyCode = getKeyCode(event);
         if (keydownCanceled) {
             event.preventDefault();
             keydownCanceled = false;
@@ -3575,11 +3713,11 @@ function listener(selectivity, $input) {
                 selectivity.focus();
                 closeSubmenu = null;
             }
-        } else if (event.keyCode === KEY_BACKSPACE) {
+        } else if (keyCode === KEY_BACKSPACE) {
             if (!dropdown && selectivity.options.allowClear) {
                 selectivity.clear();
             }
-        } else if (event.keyCode === KEY_ENTER && !event.ctrlKey) {
+        } else if (keyCode === KEY_ENTER && !event.ctrlKey) {
             if (dropdown) {
                 dropdown.selectHighlight();
             } else if (selectivity.options.showDropdown !== false) {
@@ -3587,11 +3725,11 @@ function listener(selectivity, $input) {
             }
 
             event.preventDefault();
-        } else if (event.keyCode === KEY_ESCAPE) {
+        } else if (keyCode === KEY_ESCAPE) {
             selectivity.close();
 
             event.preventDefault();
-        } else if (event.keyCode === KEY_DOWN_ARROW || event.keyCode === KEY_UP_ARROW) {
+        } else if (keyCode === KEY_DOWN_ARROW || keyCode === KEY_UP_ARROW) {
             // handled in keyHeld() because the response feels faster and it works with repeated
             // events if the user holds the key for a longer period
             // still, we issue an open() call here in case the dropdown was not yet open...
@@ -3603,873 +3741,94 @@ function listener(selectivity, $input) {
         }
     }
 
-    $input.on('keydown', keyHeld).on('keyup', keyReleased);
+    input.addEventListener('keydown', keyHeld);
+    input.addEventListener('keyup', keyReleased);
 }
 
-Selectivity.SearchInputListeners.push(listener);
+Selectivity.InputListeners.push(listener);
 
-},{"17":17}],23:[function(_dereq_,module,exports){
+},{"35":35,"37":37,"39":39}],31:[function(_dereq_,module,exports){
 'use strict';
 
-var escape = _dereq_(6);
+var Selectivity = _dereq_(35);
 
-var Selectivity = _dereq_(17);
-
-/**
- * Localizable elements of the Selectivity Templates.
- *
- * Be aware that these strings are added straight to the HTML output of the templates, so any
- * non-safe strings should be escaped.
- */
-Selectivity.Locale = {
-
-    ajaxError: function(term) { return 'Failed to fetch results for <b>' + escape(term) + '</b>'; },
-    loading: 'Loading...',
-    loadMore: 'Load more...',
-    needMoreCharacters: function(numCharacters) {
-        return 'Enter ' + numCharacters + ' more characters to search';
-    },
-    noResults: 'No results found',
-    noResultsForTerm: function(term) { return 'No results for <b>' + escape(term) + '</b>'; }
-
+var allowedOptions = {
+    allowClear: 'boolean',
+    backspaceHighlightsBeforeDelete: 'boolean',
+    closeOnSelect: 'boolean',
+    createTokenItem: 'function',
+    dropdown: 'function|null',
+    initSelection: 'function|null',
+    inputListeners: 'array',
+    items: 'array|null',
+    matcher: 'function|null',
+    placeholder: 'string',
+    positionDropdown: 'function|null',
+    query: 'function|null',
+    readOnly: 'boolean',
+    removeOnly: 'boolean',
+    shouldOpenSubmenu: 'function',
+    showSearchInputInDropdown: 'boolean',
+    suppressWheelSelector: 'string|null',
+    tabIndex: 'number',
+    templates: 'object',
+    tokenizer: 'function'
 };
 
-},{"17":17,"6":6}],24:[function(_dereq_,module,exports){
-'use strict';
-
-var $ = window.jQuery || window.Zepto;
-
-var Selectivity = _dereq_(17);
-
-var KEY_BACKSPACE = 8;
-var KEY_DELETE = 46;
-var KEY_ENTER = 13;
-
 /**
- * MultipleSelectivity Constructor.
- *
- * @param options Options object. Accepts all options from the Selectivity Base Constructor in
- *                addition to those accepted by MultipleSelectivity.setOptions().
+ * Option listener that validates the options being set. This is useful during debugging to quickly
+ * get notified if you're passing invalid options.
  */
-function MultipleSelectivity(options) {
+Selectivity.OptionListeners.unshift(function(selectivity, options) {
 
-    Selectivity.call(this, options);
+    for (var key in options) {
+        if (!options.hasOwnProperty(key)) {
+            continue;
+        }
 
-    this.$el.html(this.template('multipleSelectInput', { enabled: this.enabled }))
-            .trigger('selectivity-init', 'multiple');
-
-    this._highlightedItemId = null;
-
-    this.initSearchInput(this.$('.selectivity-multiple-input:not(.selectivity-width-detector)'));
-
-    this.rerenderSelection();
-
-    if (!options.positionDropdown) {
-        // dropdowns for multiple-value inputs should open below the select box,
-        // unless there is not enough space below, but there is space enough above, then it should
-        // open upwards
-        this.options.positionDropdown = function($el, $selectEl) {
-            var rect = $selectEl[0].getBoundingClientRect();
-            var dropdownHeight = $el.height();
-            var openUpwards = (typeof window !== 'undefined' &&
-                               rect.bottom + dropdownHeight > window.innerHeight &&
-                               rect.top - dropdownHeight > 0);
-
-            var width = $selectEl.outerWidth ? $selectEl.outerWidth() : $selectEl.width();
-            $el.css({
-                left: rect.left + 'px',
-                top: (openUpwards ? rect.top - dropdownHeight : rect.bottom) + 'px'
-            }).width(width);
-        };
-    }
-}
-
-/**
- * Methods.
- */
-var callSuper = Selectivity.inherits(MultipleSelectivity, {
-
-    /**
-     * Adds an item to the selection, if it's not selected yet.
-     *
-     * @param item The item to add. May be an item with 'id' and 'text' properties or just an ID.
-     */
-    add: function(item) {
-
-        var itemIsId = Selectivity.isValidId(item);
-        var id = (itemIsId ? item : this.validateItem(item) && item.id);
-
-        if (this._value.indexOf(id) === -1) {
-            this._value.push(id);
-
-            if (itemIsId && this.options.initSelection) {
-                this.options.initSelection([id], function(data) {
-                    if (this._value.indexOf(id) > -1) {
-                        item = this.validateItem(data[0]);
-                        this._data.push(item);
-
-                        this.triggerChange({ added: item });
-                    }
-                }.bind(this));
+        var value = options[key];
+        var type = allowedOptions[key];
+        if (type && !type.split('|').some(function(type) {
+            if (type === 'null') {
+                return value === null;
+            } else if (type === 'array') {
+                return Array.isArray(value);
             } else {
-                if (itemIsId) {
-                    item = this.getItemForId(id);
-                }
-                this._data.push(item);
-
-                this.triggerChange({ added: item });
+                return value !== null && value !== undefined && typeof value === type;
             }
-        }
-
-        this.$searchInput.val('');
-    },
-
-    /**
-     * Clears the data and value.
-     */
-    clear: function() {
-
-        this.data([]);
-    },
-
-    /**
-     * Events map.
-     *
-     * Follows the same format as Backbone: http://backbonejs.org/#View-delegateEvents
-     */
-    events: {
-        'change': 'rerenderSelection',
-        'change .selectivity-multiple-input': function() { return false; },
-        'click': '_clicked',
-        'click .selectivity-multiple-selected-item': '_itemClicked',
-        'keydown .selectivity-multiple-input': '_keyHeld',
-        'keyup .selectivity-multiple-input': '_keyReleased',
-        'paste .selectivity-multiple-input': '_onPaste',
-        'selectivity-selected': '_resultSelected'
-    },
-
-    /**
-     * @inherit
-     */
-    filterResults: function(results) {
-
-        return results.filter(function(item) {
-            return !Selectivity.findById(this._data, item.id);
-        }, this);
-    },
-
-    /**
-     * Returns the correct data for a given value.
-     *
-     * @param value The value to get the data for. Should be an array of IDs.
-     *
-     * @return The corresponding data. Will be an array of objects with 'id' and 'text' properties.
-     *         Note that if no items are defined, this method assumes the text labels will be equal
-     *         to the IDs.
-     */
-    getDataForValue: function(value) {
-
-        return value.map(this.getItemForId, this).filter(function(item) { return !!item; });
-    },
-
-    /**
-     * Returns the correct value for the given data.
-     *
-     * @param data The data to get the value for. Should be an array of objects with 'id' and 'text'
-     *             properties.
-     *
-     * @return The corresponding value. Will be an array of IDs.
-     */
-    getValueForData: function(data) {
-
-        return data.map(function(item) { return item.id; });
-    },
-
-    /**
-     * Removes an item from the selection, if it is selected.
-     *
-     * @param item The item to remove. May be an item with 'id' and 'text' properties or just an ID.
-     */
-    remove: function(item) {
-
-        var id = ($.type(item) === 'object' ? item.id : item);
-
-        var removedItem;
-        var index = Selectivity.findIndexById(this._data, id);
-        if (index > -1) {
-            removedItem = this._data[index];
-            this._data.splice(index, 1);
-        }
-
-        if (this._value[index] !== id) {
-            index = this._value.indexOf(id);
-        }
-        if (index > -1) {
-            this._value.splice(index, 1);
-        }
-
-        if (removedItem) {
-            this.triggerChange({ removed: removedItem });
-        }
-
-        if (id === this._highlightedItemId) {
-            this._highlightedItemId = null;
-        }
-    },
-
-    /**
-     * Re-renders the selection.
-     *
-     * Normally the UI is automatically updated whenever the selection changes, but you may want to
-     * call this method explicitly if you've updated the selection with the triggerChange option set
-     * to false.
-     */
-    rerenderSelection: function(event) {
-
-        event = event || {};
-
-        if (event.added) {
-            this._renderSelectedItem(event.added);
-
-            this._scrollToBottom();
-        } else if (event.removed) {
-            var quotedId = Selectivity.quoteCssAttr(event.removed.id);
-            this.$('.selectivity-multiple-selected-item[data-item-id=' + quotedId + ']').remove();
-        } else {
-            this.$('.selectivity-multiple-selected-item').remove();
-
-            this._data.forEach(this._renderSelectedItem, this);
-
-            this._updateInputWidth();
-        }
-
-        if (event.added || event.removed) {
-            if (this.dropdown) {
-                this.dropdown.showResults(this.filterResults(this.dropdown.results), {
-                    hasMore: this.dropdown.hasMore
-                });
-            }
-
-            if (this.hasKeyboard) {
-                this.focus();
-            }
-        }
-
-        this.positionDropdown();
-
-        this._updatePlaceholder();
-    },
-
-    /**
-     * @inherit
-     */
-    search: function() {
-
-        var term = this.$searchInput.val();
-
-        if (this.options.tokenizer) {
-            term = this.options.tokenizer(term, this._data, this.add.bind(this), this.options);
-
-            if ($.type(term) === 'string' && term !== this.$searchInput.val()) {
-                this.$searchInput.val(term);
-            }
-        }
-
-        if (this.dropdown) {
-            callSuper(this, 'search');
-        }
-    },
-
-    /**
-     * @inherit
-     *
-     * @param options Options object. In addition to the options supported in the base
-     *                implementation, this may contain the following properties:
-     *                backspaceHighlightsBeforeDelete - If set to true, when the user enters a
-     *                                                  backspace while there is no text in the
-     *                                                  search field but there are selected items,
-     *                                                  the last selected item will be highlighted
-     *                                                  and when a second backspace is entered the
-     *                                                  item is deleted. If false, the item gets
-     *                                                  deleted on the first backspace. The default
-     *                                                  value is true on devices that have touch
-     *                                                  input and false on devices that don't.
-     *                createTokenItem - Function to create a new item from a user's search term.
-     *                                  This is used to turn the term into an item when dropdowns
-     *                                  are disabled and the user presses Enter. It is also used by
-     *                                  the default tokenizer to create items for individual tokens.
-     *                                  The function receives a 'token' parameter which is the
-     *                                  search term (or part of a search term) to create an item for
-     *                                  and must return an item object with 'id' and 'text'
-     *                                  properties or null if no token can be created from the term.
-     *                                  The default is a function that returns an item where the id
-     *                                  and text both match the token for any non-empty string and
-     *                                  which returns null otherwise.
-     *                tokenizer - Function for tokenizing search terms. Will receive the following
-     *                            parameters:
-     *                            input - The input string to tokenize.
-     *                            selection - The current selection data.
-     *                            createToken - Callback to create a token from the search terms.
-     *                                          Should be passed an item object with 'id' and 'text'
-     *                                          properties.
-     *                            options - The options set on the Selectivity instance.
-     *                            Any string returned by the tokenizer function is treated as the
-     *                            remainder of untokenized input.
-     */
-    setOptions: function(options) {
-
-        options = options || {};
-
-        var backspaceHighlightsBeforeDelete = 'backspaceHighlightsBeforeDelete';
-        if (options[backspaceHighlightsBeforeDelete] === undefined) {
-            options[backspaceHighlightsBeforeDelete] = this.hasTouch;
-        }
-
-        options.allowedTypes = options.allowedTypes || {};
-        options.allowedTypes[backspaceHighlightsBeforeDelete] = 'boolean';
-
-        var wasEnabled = this.enabled;
-
-        callSuper(this, 'setOptions', options);
-
-        if (wasEnabled !== this.enabled) {
-            this.$el.html(this.template('multipleSelectInput', { enabled: this.enabled }));
-        }
-    },
-
-    /**
-     * Validates data to set. Throws an exception if the data is invalid.
-     *
-     * @param data The data to validate. Should be an array of objects with 'id' and 'text'
-     *             properties.
-     *
-     * @return The validated data. This may differ from the input data.
-     */
-    validateData: function(data) {
-
-        if (data === null) {
-            return [];
-        } else if ($.type(data) === 'array') {
-            return data.map(this.validateItem, this);
-        } else {
-            throw new Error('Data for MultiSelectivity instance should be array');
-        }
-    },
-
-    /**
-     * Validates a value to set. Throws an exception if the value is invalid.
-     *
-     * @param value The value to validate. Should be an array of IDs.
-     *
-     * @return The validated value. This may differ from the input value.
-     */
-    validateValue: function(value) {
-
-        if (value === null) {
-            return [];
-        } else if ($.type(value) === 'array') {
-            if (value.every(Selectivity.isValidId)) {
-                return value;
-            } else {
-                throw new Error('Value contains invalid IDs');
-            }
-        } else {
-            throw new Error('Value for MultiSelectivity instance should be an array');
-        }
-    },
-
-    /**
-     * @private
-     */
-    _backspacePressed: function() {
-
-        if (this.options.backspaceHighlightsBeforeDelete) {
-            if (this._highlightedItemId) {
-                this._deletePressed();
-            } else if (this._value.length) {
-                this._highlightItem(this._value.slice(-1)[0]);
-            }
-        } else if (this._value.length) {
-            this.remove(this._value.slice(-1)[0]);
-        }
-    },
-
-    /**
-     * @private
-     */
-    _clicked: function() {
-
-        if (this.enabled && this.options.showDropdown !== false) {
-            this.open();
-
-            return false;
-        }
-    },
-
-    /**
-     * @private
-     */
-    _createToken: function() {
-
-        var term = this.$searchInput.val();
-        var createTokenItem = this.options.createTokenItem;
-
-        if (term && createTokenItem) {
-            var item = createTokenItem(term);
-            if (item) {
-                this.add(item);
-            }
-        }
-    },
-
-    /**
-     * @private
-     */
-    _deletePressed: function() {
-
-        if (this._highlightedItemId) {
-            this.remove(this._highlightedItemId);
-        }
-    },
-
-    /**
-     * @private
-     */
-    _highlightItem: function(id) {
-
-        this._highlightedItemId = id;
-        this.$('.selectivity-multiple-selected-item').removeClass('highlighted')
-            .filter('[data-item-id=' + Selectivity.quoteCssAttr(id) + ']').addClass('highlighted');
-
-        if (this.hasKeyboard) {
-            this.focus();
-        }
-    },
-
-    /**
-     * @private
-     */
-    _itemClicked: function(event) {
-
-        if (this.enabled) {
-            this._highlightItem(this._getItemId(event));
-        }
-    },
-
-    /**
-     * @private
-     */
-    _itemRemoveClicked: function(event) {
-
-        this.remove(this._getItemId(event));
-
-        this._updateInputWidth();
-
-        return false;
-    },
-
-    /**
-     * @private
-     */
-    _keyHeld: function(event) {
-
-        this._originalValue = this.$searchInput.val();
-
-        if (event.keyCode === KEY_ENTER && !event.ctrlKey) {
-            event.preventDefault();
-        }
-    },
-
-    /**
-     * @private
-     */
-    _keyReleased: function(event) {
-
-        var inputHadText = !!this._originalValue;
-
-        if (event.keyCode === KEY_ENTER && !event.ctrlKey) {
-            if (this.options.createTokenItem) {
-                this._createToken();
-            }
-        } else if (event.keyCode === KEY_BACKSPACE && !inputHadText) {
-            this._backspacePressed();
-        } else if (event.keyCode === KEY_DELETE && !inputHadText) {
-            this._deletePressed();
-        }
-
-        this._updateInputWidth();
-    },
-
-    /**
-     * @private
-     */
-    _onPaste: function() {
-
-        setTimeout(function() {
-            this.search();
-
-            if (this.options.createTokenItem) {
-                this._createToken();
-            }
-        }.bind(this), 10);
-    },
-
-    _renderSelectedItem: function(item) {
-
-        this.$searchInput.before(this.template('multipleSelectedItem', $.extend({
-            highlighted: (item.id === this._highlightedItemId),
-            removable: !this.options.readOnly
-        }, item)));
-
-        var quotedId = Selectivity.quoteCssAttr(item.id);
-        this.$('.selectivity-multiple-selected-item[data-item-id=' + quotedId + ']')
-            .find('.selectivity-multiple-selected-item-remove')
-            .on('click', this._itemRemoveClicked.bind(this));
-    },
-
-    /**
-     * @private
-     */
-    _resultSelected: function(event) {
-
-        if (this._value.indexOf(event.id) === -1) {
-            this.add(event.item);
-        } else {
-            this.remove(event.item);
-        }
-    },
-
-    /**
-     * @private
-     */
-    _scrollToBottom: function() {
-
-        var $inputContainer = this.$('.selectivity-multiple-input-container');
-        $inputContainer.scrollTop($inputContainer.height());
-    },
-
-    /**
-     * @private
-     */
-    _updateInputWidth: function() {
-
-        if (this.enabled) {
-            var $input = this.$searchInput, $widthDetector = this.$('.selectivity-width-detector');
-            $widthDetector.text($input.val() ||
-                                !this._data.length && this.options.placeholder ||
-                                '');
-            $input.width($widthDetector.width() + 20);
-
-            this.positionDropdown();
-        }
-    },
-
-    /**
-     * @private
-     */
-    _updatePlaceholder: function() {
-
-        var placeholder = this._data.length ? '' : this.options.placeholder;
-        if (this.enabled) {
-            this.$searchInput.attr('placeholder', placeholder);
-        } else {
-            this.$('.selectivity-placeholder').text(placeholder);
+        })) {
+            throw new Error(key + ' must be of type ' + type);
         }
     }
 
 });
 
-module.exports = Selectivity.InputTypes.Multiple = MultipleSelectivity;
-
-},{"17":17,"jquery":"jquery"}],25:[function(_dereq_,module,exports){
+},{"35":35}],32:[function(_dereq_,module,exports){
 'use strict';
 
-var $ = window.jQuery || window.Zepto;
+var Dropdown = _dereq_(19);
+var Selectivity = _dereq_(35);
 
-var Selectivity = _dereq_(17);
-
-/**
- * SingleSelectivity Constructor.
- *
- * @param options Options object. Accepts all options from the Selectivity Base Constructor in
- *                addition to those accepted by SingleSelectivity.setOptions().
- */
-function SingleSelectivity(options) {
-
-    Selectivity.call(this, options);
-
-    this.$el.html(this.template('singleSelectInput', this.options))
-            .trigger('selectivity-init', 'single');
-
-    this.rerenderSelection();
-
-    if (!options.positionDropdown) {
-        // dropdowns for single-value inputs should open below the select box,
-        // unless there is not enough space below, in which case the dropdown should be moved up
-        // just enough so it fits in the window, but never so much that it reaches above the top
-        this.options.positionDropdown = function($el, $selectEl) {
-            var rect = $selectEl[0].getBoundingClientRect();
-            var dropdownTop = rect.bottom;
-
-            var deltaUp = 0;
-            if (typeof window !== 'undefined') {
-                deltaUp = Math.min(
-                    Math.max(dropdownTop + $el.height() - window.innerHeight, 0),
-                    rect.top + rect.height
-                );
-            }
-
-            $el.css({
-                left: rect.left + 'px',
-                top: dropdownTop - deltaUp + 'px'
-            }).width(rect.width);
-        };
-    }
-
-    if (options.showSearchInputInDropdown === false) {
-        this.initSearchInput(this.$('.selectivity-single-select-input'), { noSearch: true });
-    }
-}
-
-/**
- * Methods.
- */
-var callSuper = Selectivity.inherits(SingleSelectivity, {
-
-    /**
-     * Events map.
-     *
-     * Follows the same format as Backbone: http://backbonejs.org/#View-delegateEvents
-     */
-    events: {
-        'change': 'rerenderSelection',
-        'click': '_clicked',
-        'focus .selectivity-single-select-input': '_focused',
-        'selectivity-selected': '_resultSelected'
-    },
-
-    /**
-     * Clears the data and value.
-     */
-    clear: function() {
-
-        this.data(null);
-    },
-
-    /**
-     * @inherit
-     *
-     * @param options Optional options object. May contain the following property:
-     *                keepFocus - If true, the focus will remain on the input.
-     */
-    close: function(options) {
-
-        this._closing = true;
-
-        callSuper(this, 'close');
-
-        if (options && options.keepFocus && this.$searchInput) {
-            this.$searchInput.focus();
-        }
-
-        this._closing = false;
-    },
-
-    /**
-     * Returns the correct data for a given value.
-     *
-     * @param value The value to get the data for. Should be an ID.
-     *
-     * @return The corresponding data. Will be an object with 'id' and 'text' properties. Note that
-     *         if no items are defined, this method assumes the text label will be equal to the ID.
-     */
-    getDataForValue: function(value) {
-
-        return this.getItemForId(value);
-    },
-
-    /**
-     * Returns the correct value for the given data.
-     *
-     * @param data The data to get the value for. Should be an object with 'id' and 'text'
-     *             properties or null.
-     *
-     * @return The corresponding value. Will be an ID or null.
-     */
-    getValueForData: function(data) {
-
-        return (data ? data.id : null);
-    },
-
-    /**
-     * @inherit
-     */
-    open: function(options) {
-
-        this._opening = true;
-
-        var showSearchInput = (this.options.showSearchInputInDropdown !== false);
-
-        callSuper(this, 'open', $.extend({ showSearchInput: showSearchInput }, options));
-
-        this._opening = false;
-    },
-
-    /**
-     * Re-renders the selection.
-     *
-     * Normally the UI is automatically updated whenever the selection changes, but you may want to
-     * call this method explicitly if you've updated the selection with the triggerChange option set
-     * to false.
-     */
-    rerenderSelection: function() {
-
-        var $container = this.$('.selectivity-single-result-container');
-        if (this._data) {
-            $container.html(
-                this.template('singleSelectedItem', $.extend({
-                    removable: this.options.allowClear && !this.options.readOnly
-                }, this._data))
-            );
-
-            $container.find('.selectivity-single-selected-item-remove')
-                      .on('click', this._itemRemoveClicked.bind(this));
-        } else {
-            $container.html(
-                this.template('singleSelectPlaceholder', { placeholder: this.options.placeholder })
-            );
-        }
-    },
-
-    /**
-     * @inherit
-     *
-     * @param options Options object. In addition to the options supported in the base
-     *                implementation, this may contain the following properties:
-     *                allowClear - Boolean whether the selected item may be removed.
-     *                showSearchInputInDropdown - Set to false to remove the search input used in
-     *                                            dropdowns. The default is true.
-     */
-    setOptions: function(options) {
-
-        options = options || {};
-
-        options.allowedTypes = $.extend(options.allowedTypes || {}, {
-            allowClear: 'boolean',
-            showSearchInputInDropdown: 'boolean'
-        });
-
-        callSuper(this, 'setOptions', options);
-    },
-
-    /**
-     * Validates data to set. Throws an exception if the data is invalid.
-     *
-     * @param data The data to validate. Should be an object with 'id' and 'text' properties or null
-     *             to indicate no item is selected.
-     *
-     * @return The validated data. This may differ from the input data.
-     */
-    validateData: function(data) {
-
-        return (data === null ? data : this.validateItem(data));
-    },
-
-    /**
-     * Validates a value to set. Throws an exception if the value is invalid.
-     *
-     * @param value The value to validate. Should be null or a valid ID.
-     *
-     * @return The validated value. This may differ from the input value.
-     */
-    validateValue: function(value) {
-
-        if (value === null || Selectivity.isValidId(value)) {
-            return value;
-        } else {
-            throw new Error('Value for SingleSelectivity instance should be a valid ID or null');
-        }
-    },
-
-    /**
-     * @private
-     */
-    _clicked: function(event) {
-
-        if ($(event.target).closest('.selectivity-search-input').length) {
-            return true;
-        }
-
-        if (this.enabled) {
-            if (this.dropdown) {
-                this.close({ keepFocus: true });
-            } else if (this.options.showDropdown !== false) {
-                this.open();
-            }
-
-            return false;
-        }
-    },
-
-    /**
-     * @private
-     */
-    _focused: function() {
-
-        if (this.enabled && !this._closing && !this._opening &&
-            this.options.showDropdown !== false) {
-            this.open();
-        }
-    },
-
-    /**
-     * @private
-     */
-    _itemRemoveClicked: function() {
-
-        this.data(null);
-
-        return false;
-    },
-
-    /**
-     * @private
-     */
-    _resultSelected: function(event) {
-
-        this.data(event.item);
-
-        this.close({ keepFocus: true });
-    }
-
-});
-
-module.exports = Selectivity.InputTypes.Single = SingleSelectivity;
-
-},{"17":17,"jquery":"jquery"}],26:[function(_dereq_,module,exports){
-'use strict';
-
-var Selectivity = _dereq_(17);
-var SelectivityDropdown = _dereq_(20);
+var findResultItem = _dereq_(37);
 
 /**
  * Extended dropdown that supports submenus.
  */
-function SelectivitySubmenu(options) {
+function SubmenuPlugin(selectivity, options) {
 
     /**
      * Optional parent dropdown menu from which this dropdown was opened.
      */
     this.parentMenu = options.parentMenu;
 
-    SelectivityDropdown.call(this, options);
+    Dropdown.call(this, selectivity, options);
 
     this._closeSubmenuTimeout = 0;
 
     this._openSubmenuTimeout = 0;
 }
 
-var callSuper = Selectivity.inherits(SelectivitySubmenu, SelectivityDropdown, {
+var callSuper = Selectivity.inherits(SubmenuPlugin, Dropdown, {
 
     /**
      * @inherit
@@ -4494,24 +3853,31 @@ var callSuper = Selectivity.inherits(SelectivitySubmenu, SelectivityDropdown, {
     /**
      * @inherit
      *
-     * @param options Optional options object. May contain the following property:
+     * @param options Optional options object. May contain the following properties:
      *                delay - If true, indicates any submenu should not be opened until after some
      *                        delay.
+     *                openSubmenu - If false, no submenu will be automatically opened for the
+     *                              highlighted item.
+     *                reason - The reason why the result item is being highlighted. See
+     *                         Dropdown#highlight().
      */
     highlight: function(item, options) {
 
-        if (options && options.delay) {
+        options = options || {};
+        var reason = options.reason || 'unspecified';
+
+        if (options.delay) {
             callSuper(this, 'highlight', item);
 
             clearTimeout(this._openSubmenuTimeout);
-            this._openSubmenuTimeout = setTimeout(this._doHighlight.bind(this, item), 300);
+            this._openSubmenuTimeout = setTimeout(this._doHighlight.bind(this, item, reason), 300);
         } else if (this.submenu) {
             if (this.highlightedResult && this.highlightedResult.id === item.id) {
-                this._doHighlight(item);
+                this._doHighlight(item, reason);
             } else {
                 clearTimeout(this._closeSubmenuTimeout);
                 this._closeSubmenuTimeout = setTimeout(
-                    this._closeSubmenuAndHighlight.bind(this, item), 100
+                    this._closeSubmenuAndHighlight.bind(this, item, reason), 100
                 );
             }
         } else {
@@ -4520,7 +3886,11 @@ var callSuper = Selectivity.inherits(SelectivitySubmenu, SelectivityDropdown, {
                 this.parentMenu._closeSubmenuTimeout = 0;
             }
 
-            this._doHighlight(item);
+            if (options.openSubmenu === false) {
+                callSuper(this, 'highlight', item);
+            } else {
+                this._doHighlight(item, reason);
+            }
         }
     },
 
@@ -4530,10 +3900,16 @@ var callSuper = Selectivity.inherits(SelectivitySubmenu, SelectivityDropdown, {
     search: function(term) {
 
         if (this.submenu) {
-            this.submenu.search(term);
-        } else {
-            callSuper(this, 'search', term);
+            var searchInput = this.$('.selectivity-search-input');
+            if (searchInput && searchInput === document.activeElement) {
+                this.submenu.close();
+            } else {
+                this.submenu.search(term);
+                return;
+            }
         }
+
+        callSuper(this, 'search', term);
     },
 
     /**
@@ -4551,25 +3927,23 @@ var callSuper = Selectivity.inherits(SelectivitySubmenu, SelectivityDropdown, {
     /**
      * @inherit
      */
-    selectItem: function(id) {
-
-        var item = Selectivity.findNestedById(this.results, id);
-        if (item && !item.disabled && !item.submenu) {
-            var options = { id: id, item: item };
-            if (this.selectivity.triggerEvent('selectivity-selecting', options)) {
-                this.selectivity.triggerEvent('selectivity-selected', options);
-            }
-        }
-    },
-
-    /**
-     * @inherit
-     */
     showResults: function(results, options) {
 
-        if (this.submenu) {
+        // makes sure any result item with a submenu that's not explicitly
+        // set as selectable becomes unselectable
+        function setSelectable(item) {
+            if (item.children) {
+                item.children.forEach(setSelectable);
+            }
+            if (item.submenu) {
+                item.selectable = !!item.selectable;
+            }
+        }
+
+        if (this.submenu && options.dropdown !== this) {
             this.submenu.showResults(results, options);
         } else {
+            results.forEach(setSelectable);
             callSuper(this, 'showResults', results, options);
         }
     },
@@ -4580,7 +3954,7 @@ var callSuper = Selectivity.inherits(SelectivitySubmenu, SelectivityDropdown, {
     triggerClose: function() {
 
         if (this.parentMenu) {
-            this.selectivity.$el.trigger('selectivity-close-submenu');
+            this.selectivity.triggerEvent('selectivity-close-submenu');
         } else {
             callSuper(this, 'triggerClose');
         }
@@ -4592,7 +3966,7 @@ var callSuper = Selectivity.inherits(SelectivitySubmenu, SelectivityDropdown, {
     triggerOpen: function() {
 
         if (this.parentMenu) {
-            this.selectivity.$el.trigger('selectivity-open-submenu');
+            this.selectivity.triggerEvent('selectivity-open-submenu');
         } else {
             callSuper(this, 'triggerOpen');
         }
@@ -4601,54 +3975,859 @@ var callSuper = Selectivity.inherits(SelectivitySubmenu, SelectivityDropdown, {
     /**
      * @private
      */
-    _closeSubmenuAndHighlight: function(item) {
+    _closeSubmenuAndHighlight: function(item, reason) {
 
         if (this.submenu) {
             this.submenu.close();
         }
 
-        this._doHighlight(item);
+        this._doHighlight(item, reason);
     },
 
     /**
      * @private
      */
-    _doHighlight: function(item) {
+    _doHighlight: function(item, reason) {
 
         callSuper(this, 'highlight', item);
 
-        if (item.submenu && !this.submenu) {
-            var selectivity = this.selectivity;
-            var Dropdown = selectivity.options.dropdown || Selectivity.Dropdown;
-            if (Dropdown) {
-                var quotedId = Selectivity.quoteCssAttr(item.id);
-                var $item = this.$('.selectivity-result-item[data-item-id=' + quotedId + ']');
-                var $dropdownEl = this.$el;
+        var options = this.selectivity.options;
+        if ((!item.submenu || this.submenu) ||
+            (options.shouldOpenSubmenu && options.shouldOpenSubmenu(item, reason) === false)) {
+            return;
+        }
 
-                this.submenu = new Dropdown({
-                    items: item.submenu.items || null,
-                    parentMenu: this,
-                    position: item.submenu.positionDropdown || function($el) {
-                        var rect = $dropdownEl[0].getBoundingClientRect();
-                        $el.css({
-                            left: rect.right + 'px',
-                            top: $item.position().top + rect.top + 'px'
-                        }).width(rect.width);
-                    },
-                    query: item.submenu.query || null,
-                    selectivity: selectivity,
-                    showSearchInput: item.submenu.showSearchInput
-                });
+        var Dropdown = options.dropdown || Selectivity.Dropdown;
+        if (Dropdown) {
+            var resultItems = this.el.querySelectorAll('.selectivity-result-item');
+            var resultItem = findResultItem(resultItems, item.id);
+            var dropdownEl = this.el;
 
-                this.submenu.search('');
-            }
+            this.submenu = new Dropdown(this.selectivity, {
+                highlightFirstItem: !item.selectable,
+                items: item.submenu.items || null,
+                parentMenu: this,
+                position: function(el, selectEl) {
+                    if (item.submenu.positionDropdown) {
+                        item.submenu.positionDropdown(el, selectEl, resultItem, dropdownEl);
+                    } else {
+                        var rect = dropdownEl.getBoundingClientRect();
+                        var left = rect.right;
+                        var width = rect.width;
+                        if (left + width > document.body.clientWidth && rect.left - width > 0) {
+                            // Open the submenu on the left-hand side if there's no sufficient
+                            // space on the right side.
+                            // Use a little margin to prevent awkward-looking overlaps.
+                            left = rect.left - width + 10;
+                        }
+
+                        el.style.left = left + 'px';
+                        el.style.top = resultItem.getBoundingClientRect().top + 'px';
+                        el.style.width = width + 'px';
+                    }
+                },
+                query: item.submenu.query || null,
+                showSearchInput: item.submenu.showSearchInput
+            });
+
+            this.submenu.search('');
         }
     }
 
 });
 
-Selectivity.Dropdown = SelectivitySubmenu;
+Selectivity.Dropdown = SubmenuPlugin;
 
+module.exports = SubmenuPlugin;
+
+},{"19":19,"35":35,"37":37}],33:[function(_dereq_,module,exports){
+'use strict';
+
+var extend = (window.jQuery || window.Zepto).extend;
+
+var Selectivity = _dereq_(35);
+
+function defaultTokenizer(input, selection, createToken, options) {
+
+    var createTokenItem = options.createTokenItem || function(token) {
+        return token ? { id: token, text: token } : null;
+    };
+
+    var separators = options.tokenSeparators;
+
+    function hasToken(input) {
+        return input ? separators.some(function(separator) {
+            return input.indexOf(separator) > -1;
+        }) : false;
+    }
+
+    function takeToken(input) {
+        for (var i = 0, length = input.length; i < length; i++) {
+            if (separators.indexOf(input[i]) > -1) {
+                return { term: input.slice(0, i), input: input.slice(i + 1) };
+            }
+        }
+        return {};
+    }
+
+    while (hasToken(input)) {
+        var token = takeToken(input);
+        if (token.term) {
+            var item = createTokenItem(token.term);
+            if (item && !Selectivity.findById(selection, item.id)) {
+                createToken(item);
+            }
+        }
+        input = token.input;
+    }
+
+    return input;
+}
+
+/**
+ * Option listener that provides a default tokenizer which is used when the tokenSeparators option
+ * is specified.
+ *
+ * @param options Options object. In addition to the options supported in the multi-input
+ *                implementation, this may contain the following property:
+ *                tokenSeparators - Array of string separators which are used to separate the search
+ *                                  string into tokens. If specified and the tokenizer property is
+ *                                  not set, the tokenizer property will be set to a function which
+ *                                  splits the search term into tokens separated by any of the given
+ *                                  separators. The tokens will be converted into selectable items
+ *                                  using the 'createTokenItem' function. The default tokenizer also
+ *                                  filters out already selected items.
+ */
+Selectivity.OptionListeners.push(function(selectivity, options) {
+
+    if (options.tokenSeparators) {
+        options.allowedTypes = extend({ tokenSeparators: 'array' }, options.allowedTypes);
+
+        options.tokenizer = options.tokenizer || defaultTokenizer;
+    }
+});
+
+},{"35":35,"lodash/extend":"lodash/extend"}],34:[function(_dereq_,module,exports){
+_dereq_(19);_dereq_(21);_dereq_(22);_dereq_(23);_dereq_(24);_dereq_(25);_dereq_(26);_dereq_(27);_dereq_(28);_dereq_(29);_dereq_(30);_dereq_(31);_dereq_(32);_dereq_(33);_dereq_(36);_dereq_(18);
+},{"18":18,"19":19,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31,"32":32,"33":33,"36":36}],35:[function(_dereq_,module,exports){
+'use strict';
+
+var extend = (window.jQuery || window.Zepto).extend;
+var isString = _dereq_(13);
+
+var EventListener = _dereq_(20);
+var toggleClass = _dereq_(44);
+
+/**
+ * Selectivity Base Constructor.
+ *
+ * You will never use this constructor directly. Instead, you use $(selector).selectivity(options)
+ * to create an instance of either MultipleSelectivity or SingleSelectivity. This class defines all
+ * functionality that is common between both.
+ *
+ * @param options Options object. Accepts the same options as the setOptions method(), in addition
+ *                to the following ones:
+ *                data - Initial selection data to set. This should be an array of objects with 'id'
+ *                       and 'text' properties. This option is mutually exclusive with 'value'.
+ *                element - The DOM element to which to attach the Selectivity instance. This
+ *                          property is set by the API wrapper.
+ *                value - Initial value to set. This should be an array of IDs. This property is
+ *                        mutually exclusive with 'data'.
+ */
+function Selectivity(options) {
+
+    /**
+     * Reference to the currently open dropdown.
+     */
+    this.dropdown = null;
+
+    /**
+     * DOM element to which this instance is attached.
+     */
+    this.el = options.element;
+
+    /**
+     * Whether the input is enabled.
+     *
+     * This is false when the option readOnly is false or the option removeOnly is false.
+     */
+    this.enabled = (!options.readOnly && !options.removeOnly);
+
+    /**
+     * DOM element for the input.
+     *
+     * May be null as long as there is no visible input. It is set by initInput().
+     */
+    this.input = null;
+
+    /**
+     * Array of items from which to select. If set, this will be an array of objects with 'id' and
+     * 'text' properties.
+     *
+     * If given, all items are expected to be available locally and all selection operations operate
+     * on this local array only. If null, items are not available locally, and a query function
+     * should be provided to fetch remote data.
+     */
+    this.items = null;
+
+    /**
+     * Options passed to the Selectivity instance or set through setOptions().
+     */
+    this.options = {};
+
+    /**
+     * Mapping of templates.
+     *
+     * Custom templates can be specified in the options object.
+     */
+    this.templates = extend({}, Selectivity.Templates);
+
+    /**
+     * The last used search term.
+     */
+    this.term = '';
+
+    this.setOptions(options);
+
+    if (options.value) {
+        this.setValue(options.value, { triggerChange: false });
+    } else {
+        this.setData(options.data || null, { triggerChange: false });
+    }
+
+    this.el.setAttribute('tabindex', options.tabIndex || 0);
+
+    this.events = new EventListener(this.el, this);
+    this.events.on({
+        'blur': this._blur,
+        'mouseenter': this._mouseenter,
+        'mouseleave': this._mouseleave,
+        'selectivity-close': this._closed
+    });
+}
+
+/**
+ * Methods.
+ */
+extend(Selectivity.prototype, {
+
+    /**
+     * Convenience shortcut for this.el.querySelector(selector).
+     */
+    $: function(selector) {
+
+        return this.el.querySelector(selector);
+    },
+
+    /**
+     * Closes the dropdown.
+     */
+    close: function() {
+
+        this._clearCloseTimeout();
+
+        if (this.dropdown) {
+            this.dropdown.close();
+            this.dropdown = null;
+        }
+    },
+
+    /**
+     * Destroys the Selectivity instance.
+     */
+    destroy: function() {
+
+        this.events.destruct();
+
+        var el = this.el;
+        while (el.firstChild) {
+            el.removeChild(el.firstChild);
+        }
+        el.selectivity = null;
+    },
+
+    /**
+     * Filters the results to be displayed in the dropdown.
+     *
+     * The default implementation simply returns the results unfiltered, but the MultipleSelectivity
+     * class overrides this method to filter out any items that have already been selected.
+     *
+     * @param results Array of items with 'id' and 'text' properties.
+     *
+     * @return The filtered array.
+     */
+    filterResults: function(results) {
+
+        return results;
+    },
+
+    /**
+     * Applies focus to the input.
+     */
+    focus: function() {
+
+        this._clearCloseTimeout();
+
+        this._focusing = true;
+
+        if (this.input) {
+            this.input.focus();
+        }
+
+        this._focusing = false;
+    },
+
+    /**
+     * Returns the selection data.
+     */
+    getData: function() {
+
+        return this._data;
+    },
+
+    /**
+     * Returns the correct item for a given ID.
+     *
+     * @param id The ID to get the item for.
+     *
+     * @return The corresponding item. Will be an object with 'id' and 'text' properties or null if
+     *         the item cannot be found. Note that if no items are defined, this method assumes the
+     *         text labels will be equal to the IDs.
+     */
+    getItemForId: function(id) {
+
+        var items = this.items;
+        if (items) {
+            return Selectivity.findNestedById(items, id);
+        } else {
+            return { id: id, text: '' + id };
+        }
+    },
+
+    /**
+     * Returns the item ID related to an element or event target.
+     *
+     * @param elementOrEvent The DOM element or event to get the item ID for.
+     *
+     * @return Item ID or null if no ID could be found.
+     */
+    getRelatedItemId: function(elementOrEvent) {
+
+        var el = elementOrEvent.target || elementOrEvent;
+        while (el) {
+            if (el.hasAttribute('data-item-id')) {
+                break;
+            }
+            el = el.parentNode;
+        }
+
+        if (!el) {
+            return null;
+        }
+
+        var id = el.getAttribute('data-item-id');
+
+        // IDs can be either numbers or strings, but attribute values are always strings, so we
+        // will have to find out whether the item ID ought to be a number or string ourselves.
+        if (Selectivity.findById(this._data || [], id)) {
+            return id;
+        } else {
+            var dropdown = this.dropdown;
+            while (dropdown) {
+                if (Selectivity.findNestedById(dropdown.results, id)) {
+                    return id;
+                }
+                // FIXME: reference to submenu plugin doesn't belong in base
+                dropdown = dropdown.submenu;
+            }
+            var number = parseInt(id, 10);
+            return ('' + number === id ? number : id);
+        }
+    },
+
+    /**
+     * Returns the value of the selection.
+     */
+    getValue: function() {
+
+        return this._value;
+    },
+
+    /**
+     * Initializes the input element.
+     *
+     * Sets the input property, invokes all input listeners and (by default) attaches the action of
+     * searching when something is typed.
+     *
+     * @param input Input element.
+     * @param options Optional options object. May contain the following property:
+     *                search - If false, no event handlers are setup to initiate searching when the
+     *                         user types in the input field. This is useful if you want to use the
+     *                         input only to handle keyboard support.
+     */
+    initInput: function(input, options) {
+
+        this.input = input;
+
+        var selectivity = this;
+        var inputListeners = this.options.inputListeners || Selectivity.InputListeners;
+        inputListeners.forEach(function(listener) {
+            listener(selectivity, input, options);
+        });
+
+        if (!options || options.search !== false) {
+            input.addEventListener('keyup', function(event) {
+                if (!event.defaultPrevented) {
+                    selectivity.search(event.target.value);
+                }
+            });
+        }
+    },
+
+    /**
+     * Opens the dropdown.
+     */
+    open: function() {
+
+        if (this._opening || this.dropdown || !this.triggerEvent('selectivity-opening')) {
+            return;
+        }
+
+        this._opening = true;
+
+        var Dropdown = this.options.dropdown || Selectivity.Dropdown;
+        if (Dropdown) {
+            this.dropdown = new Dropdown(this, {
+                items: this.items,
+                position: this.options.positionDropdown,
+                query: this.options.query,
+                showSearchInput: (this.options.showSearchInputInDropdown !== false)
+            });
+        }
+
+        this.search('');
+
+        this.focus();
+
+        toggleClass(this.el, 'open', true);
+
+        this._opening = false;
+    },
+
+    /**
+     * (Re-)positions the dropdown.
+     */
+    positionDropdown: function() {
+
+        if (this.dropdown) {
+            this.dropdown.position();
+        }
+    },
+
+    /**
+     * Searches for results based on the term given.
+     *
+     * If an items array has been passed with the options to the Selectivity instance, a local
+     * search will be performed among those items. Otherwise, the query function specified in the
+     * options will be used to perform the search. If neither is defined, nothing happens.
+     *
+     * @param term Term to search for.
+     */
+    search: function(term) {
+
+        this.open();
+
+        if (this.dropdown) {
+            this.dropdown.search(term);
+        }
+    },
+
+    /**
+     * Sets the selection data.
+     *
+     * The selection data contains both IDs and text labels. If you only want to set or get the IDs,
+     * you should use the value() method.
+     *
+     * @param newData New data to set. For a MultipleSelectivity instance the data must be an array
+     *                of objects with 'id' and 'text' properties, for a SingleSelectivity instance
+     *                the data must be a single such object or null to indicate no item is selected.
+     * @param options Optional options object. May contain the following property:
+     *                triggerChange - Set to false to suppress the "change" event being triggered.
+     *                                Note this will also cause the UI to not update automatically;
+     *                                so you may want to call rerenderSelection() manually when
+     *                                using this option.
+     */
+    setData: function(newData, options) {
+
+        options = options || {};
+
+        newData = this.validateData(newData);
+
+        this._data = newData;
+        this._value = this.getValueForData(newData);
+
+        if (options.triggerChange !== false) {
+            this.triggerChange();
+        }
+    },
+
+    /**
+     * Sets one or more options on this Selectivity instance.
+     *
+     * @param options Options object. May contain one or more of the following properties:
+     *                closeOnSelect - Set to false to keep the dropdown open after the user has
+     *                                selected an item. This is useful if you want to allow the user
+     *                                to quickly select multiple items. The default value is true.
+     *                dropdown - Custom dropdown implementation to use for this instance.
+     *                initSelection - Function to map values by ID to selection data. This function
+     *                                receives two arguments, 'value' and 'callback'. The value is
+     *                                the current value of the selection, which is an ID or an array
+     *                                of IDs depending on the input type. The callback should be
+     *                                invoked with an object or array of objects, respectively,
+     *                                containing 'id' and 'text' properties.
+     *                inputListeners - Array of search input listeners. By default, the global
+     *                                 array Selectivity.InputListeners is used.
+     *                items - Array of items from which to select. Should be an array of objects
+     *                        with 'id' and 'text' properties. As convenience, you may also pass an
+     *                        array of strings, in which case the same string is used for both the
+     *                        'id' and 'text' properties. If items are given, all items are expected
+     *                        to be available locally and all selection operations operate on this
+     *                        local array only. If null, items are not available locally, and a
+     *                        query function should be provided to fetch remote data.
+     *                matcher - Function to determine whether text matches a given search term. Note
+     *                          this function is only used if you have specified an array of items.
+     *                          Receives two arguments:
+     *                          item - The item that should match the search term.
+     *                          term - The search term. Note that for performance reasons, the term
+     *                                 has always been already processed using
+     *                                 Selectivity.transformText().
+     *                          The method should return the item if it matches, and null otherwise.
+     *                          If the item has a children array, the matcher is expected to filter
+     *                          those itself (be sure to only return the filtered array of children
+     *                          in the returned item and not to modify the children of the item
+     *                          argument).
+     *                placeholder - Placeholder text to display when the element has no focus and
+     *                              no selected items.
+     *                positionDropdown - Function to position the dropdown. Receives two arguments:
+     *                                   dropdownEl - The element to be positioned.
+     *                                   selectEl - The element of the Selectivity instance, that
+     *                                              you can position the dropdown to.
+     *                                   The default implementation positions the dropdown element
+     *                                   under the Selectivity's element and gives it the same
+     *                                   width.
+     *                query - Function to use for querying items. Receives a single object as
+     *                        argument with the following properties:
+     *                        callback - Callback to invoke when the results are available. This
+     *                                   callback should be passed a single object as argument with
+     *                                   the following properties:
+     *                                   more - Boolean that can be set to true to indicate there
+     *                                          are more results available. Additional results may
+     *                                          be fetched by the user through pagination.
+     *                                   results - Array of result items. The format for the result
+     *                                             items is the same as for passing local items.
+     *                        offset - This property is only used for pagination and indicates how
+     *                                 many results should be skipped when returning more results.
+     *                        selectivity - The Selectivity instance the query function is used on.
+     *                        term - The search term the user is searching for. Unlike with the
+     *                               matcher function, the term has not been processed using
+     *                               Selectivity.transformText().
+     *                readOnly - If true, disables any modification of the input.
+     *                removeOnly - If true, disables any modification of the input except removing
+     *                             of selected items.
+     *                shouldOpenSubmenu - Function to call that will decide whether a submenu should
+     *                                    be opened. Receives two parameters:
+     *                                    item - The currently highlighted result item.
+     *                                    reason - The reason why the item is being highlighted.
+     *                                             See Dropdown#highlight() for possible values.
+     *                showDropdown - Set to false if you don't want to use any dropdown (you can
+     *                               still open it programmatically using open()).
+     *                showSearchInputInDropdown - Set to false to remove the search input used in
+     *                                            dropdowns. The default is true for single-value
+     *                                            inputs.
+     *                templates - Object with instance-specific templates to override the global
+     *                            templates assigned to Selectivity.Templates.
+     */
+    setOptions: function(options) {
+
+        options = options || {};
+
+        var selectivity = this;
+        Selectivity.OptionListeners.forEach(function(listener) {
+            listener(selectivity, options);
+        });
+
+        if ('items' in options) {
+            this.items = (options.items ? Selectivity.processItems(options.items) : null);
+        }
+        if ('templates' in options) {
+            extend(this.templates, options.templates);
+        }
+
+        extend(this.options, options);
+
+        this.enabled = (!this.options.readOnly && !this.options.removeOnly);
+    },
+
+    /**
+     * Sets the value of the selection.
+     *
+     * The value of the selection only concerns the IDs of the selection items. If you are
+     * interested in the IDs and the text labels, you should use the data() method.
+     *
+     * Note that if neither the items option nor the initSelection option have been set, Selectivity
+     * will have no way to determine what text labels should be used with the given IDs in which
+     * case it will assume the text is equal to the ID. This is useful if you're working with tags,
+     * or selecting e-mail addresses for instance, but may not always be what you want.
+     *
+     * @param newValue New value to set. For a MultipleSelectivity instance the value must be an
+     *                 array of IDs, for a SingleSelectivity instance the value must be a single ID
+     *                 (a string or a number) or null to indicate no item is selected.
+     * @param options Optional options object. May contain the following property:
+     *                triggerChange - Set to false to suppress the "change" event being triggered.
+     *                                Note this will also cause the UI to not update automatically;
+     *                                so you may want to call rerenderSelection() manually when
+     *                                using this option.
+     */
+    setValue: function(newValue, options) {
+
+        options = options || {};
+
+        newValue = this.validateValue(newValue);
+
+        this._value = newValue;
+
+        if (this.options.initSelection) {
+            this.options.initSelection(newValue, function(data) {
+                if (this._value === newValue) {
+                    this._data = this.validateData(data);
+
+                    if (options.triggerChange !== false) {
+                        this.triggerChange();
+                    }
+                }
+            }.bind(this));
+        } else {
+            this._data = this.getDataForValue(newValue);
+
+            if (options.triggerChange !== false) {
+                this.triggerChange();
+            }
+        }
+    },
+
+    /**
+     * Returns the result of the given template.
+     *
+     * @param templateName Name of the template to process.
+     * @param options Options to pass to the template.
+     *
+     * @return String containing HTML.
+     */
+    template: function(templateName, options) {
+
+        var template = this.templates[templateName];
+        if (!template) {
+            throw new Error('Unknown template: ' + templateName);
+        }
+
+        if (typeof template === 'function') {
+            return template(options);
+        } else if (template.render) {
+            return template.render(options);
+        } else {
+            return template.toString();
+        }
+    },
+
+    /**
+     * Triggers the change event.
+     *
+     * The event object at least contains the following property:
+     * value - The new value of the Selectivity instance.
+     *
+     * @param Optional additional options added to the event object.
+     */
+    triggerChange: function(options) {
+
+        var data = extend({ value: this._value }, options);
+        this.triggerEvent('change', data);
+        this.triggerEvent('selectivity-change', data);
+    },
+
+    /**
+     * Triggers an event on the instance's element.
+     *
+     * @param eventName Name of the event to trigger.
+     * @param data Optional event data to be added to the event object.
+     *
+     * @return Whether the default action of the event may be executed, ie. returns false if
+     *         preventDefault() has been called.
+     */
+    triggerEvent: function(eventName, data) {
+
+        var event = document.createEvent('Event');
+        event.initEvent(eventName, /* bubbles: */ false, /* cancelable: */ true);
+        extend(event, data);
+        this.el.dispatchEvent(event);
+        return !event.defaultPrevented;
+    },
+
+    /**
+     * Validates a single item. Throws an exception if the item is invalid.
+     *
+     * @param item The item to validate.
+     *
+     * @return The validated item. May differ from the input item.
+     */
+    validateItem: function(item) {
+
+        if (item && Selectivity.isValidId(item.id) && isString(item.text)) {
+            return item;
+        } else {
+            throw new Error('Item should have id (number or string) and text (string) properties');
+        }
+    },
+
+    /**
+     * @private
+     */
+    _blur: function() {
+
+        if (!this._focusing && !this.el.classList.contains('hover')) {
+            // Without the timeout it appears clicks on result items are not always properly
+            // handled, especially when the user doesn't click exactly on the text of the result
+            // item. I don't understand really why that happens, or why the timeout has to be so
+            // large, but after trial and error, this now seems to work reliably...
+            this._clearCloseTimeout();
+            this._closeTimeout = setTimeout(this.close.bind(this), 166);
+        }
+    },
+
+    /**
+     * @private
+     */
+    _clearCloseTimeout: function() {
+
+        if (this._closeTimeout) {
+            clearTimeout(this._closeTimeout);
+            this._closeTimeout = 0;
+        }
+    },
+
+    /**
+     * @private
+     */
+    _closed: function() {
+
+        this.dropdown = null;
+
+        toggleClass(this.el, 'open', false);
+    },
+
+    /**
+     * @private
+     */
+    _mouseleave: function() {
+
+        toggleClass(this.el, 'hover', false);
+    },
+
+    /**
+     * @private
+     */
+    _mouseenter: function() {
+
+        toggleClass(this.el, 'hover', true);
+    }
+
+});
+
+/**
+ * Dropdown class to use for displaying dropdowns.
+ *
+ * The default implementation of a dropdown is defined in the selectivity-dropdown module.
+ */
+Selectivity.Dropdown = null;
+
+/**
+ * Array of input listeners.
+ *
+ * Input listeners are invoked when initInput() is called (typically right after the input is
+ * created). Every listener receives three arguments:
+ *
+ * selectivity - The Selectivity instance.
+ * input - DOM element of the input.
+ * options - Options that were passed to initInput().
+ *
+ * An example of a search input listener is the selectivity-keyboard module.
+ */
+Selectivity.InputListeners = [];
+
+/**
+ * Mapping of input types.
+ */
+Selectivity.Inputs = {};
+
+/**
+ * Array of option listeners.
+ *
+ * Option listeners are invoked when setOptions() is called. Every listener receives two arguments:
+ *
+ * selectivity - The Selectivity instance.
+ * options - The options that are about to be set. The listener may modify this options object.
+ *
+ * An example of an option listener is the selectivity-traditional module.
+ */
+Selectivity.OptionListeners = [];
+
+/**
+ * Mapping with templates to use for rendering select boxes and dropdowns. See
+ * selectivity-templates.js for a useful set of default templates, as well as for documentation of
+ * the individual templates.
+ */
+Selectivity.Templates = {};
+
+/**
+ * Finds an item in the given array with the specified ID.
+ *
+ * @param array Array to search in.
+ * @param id ID to search for.
+ *
+ * @return The item in the array with the given ID, or null if the item was not found.
+ */
+Selectivity.findById = function(array, id) {
+
+    var index = Selectivity.findIndexById(array, id);
+    return (index > -1 ? array[index] : null);
+};
+
+/**
+ * Finds the index of an item in the given array with the specified ID.
+ *
+ * @param array Array to search in.
+ * @param id ID to search for.
+ *
+ * @return The index of the item in the array with the given ID, or -1 if the item was not found.
+ */
+Selectivity.findIndexById = function(array, id) {
+
+    for (var i = 0, length = array.length; i < length; i++) {
+        if (array[i].id === id) {
+            return i;
+        }
+    }
+    return -1;
+};
+
+/**
+ * Finds an item in the given array with the specified ID. Items in the array may contain 'children'
+ * properties which in turn will be searched for the item.
+ *
+ * @param array Array to search in.
+ * @param id ID to search for.
+ *
+ * @return The item in the array with the given ID, or null if the item was not found.
+ */
 Selectivity.findNestedById = function(array, id) {
 
     for (var i = 0, length = array.length; i < length; i++) {
@@ -4658,6 +4837,7 @@ Selectivity.findNestedById = function(array, id) {
         } else if (item.children) {
             result = Selectivity.findNestedById(item.children, id);
         } else if (item.submenu && item.submenu.items) {
+            // FIXME: reference to submenu plugin doesn't belong in base
             result = Selectivity.findNestedById(item.submenu.items, id);
         }
         if (result) {
@@ -4667,23 +4847,144 @@ Selectivity.findNestedById = function(array, id) {
     return null;
 };
 
-module.exports = SelectivitySubmenu;
+/**
+ * Utility method for inheriting another class.
+ *
+ * @param SubClass Constructor function of the subclass.
+ * @param SuperClass Constructor function of the superclass.
+ * @param prototype Object with methods you want to add to the subclass prototype.
+ *
+ * @return A utility function for calling the methods of the superclass. This function receives two
+ *         arguments: The this object on which you want to execute the method and the name of the
+ *         method. Any arguments past those are passed to the superclass method.
+ */
+Selectivity.inherits = function(SubClass, SuperClass, prototype) {
 
-},{"17":17,"20":20}],27:[function(_dereq_,module,exports){
+    SubClass.prototype = extend(
+        Object.create(SuperClass.prototype),
+        { constructor: SubClass },
+        prototype
+    );
+
+    return function(self, methodName) {
+        SuperClass.prototype[methodName].apply(self, Array.prototype.slice.call(arguments, 2));
+    };
+};
+
+/**
+ * Checks whether a value can be used as a valid ID for selection items. Only numbers and strings
+ * are accepted to be used as IDs.
+ *
+ * @param id The value to check whether it is a valid ID.
+ *
+ * @return true if the value is a valid ID, false otherwise.
+ */
+Selectivity.isValidId = function(id) {
+
+    return typeof id === 'number' || isString(id);
+};
+
+/**
+ * Decides whether a given item matches a search term. The default implementation simply
+ * checks whether the term is contained within the item's text, after transforming them using
+ * transformText().
+ *
+ * @param item The item that should match the search term.
+ * @param term The search term. Note that for performance reasons, the term has always been already
+ *             processed using transformText().
+ *
+ * @return true if the text matches the term, false otherwise.
+ */
+Selectivity.matcher = function(item, term) {
+
+    var result = null;
+    if (Selectivity.transformText(item.text).indexOf(term) > -1) {
+        result = item;
+    } else if (item.children) {
+        var matchingChildren = item.children.map(function(child) {
+            return Selectivity.matcher(child, term);
+        }).filter(function(child) {
+            return !!child;
+        });
+        if (matchingChildren.length) {
+            result = { id: item.id, text: item.text, children: matchingChildren };
+        }
+    }
+    return result;
+};
+
+/**
+ * Helper function for processing items.
+ *
+ * @param item The item to process, either as object containing 'id' and 'text' properties or just
+ *             as ID. The 'id' property of an item is optional if it has a 'children' property
+ *             containing an array of items.
+ *
+ * @return Object containing 'id' and 'text' properties.
+ */
+Selectivity.processItem = function(item) {
+
+    if (Selectivity.isValidId(item)) {
+        return { id: item, text: '' + item };
+    } else if (item &&
+               (Selectivity.isValidId(item.id) || item.children) && isString(item.text)) {
+        if (item.children) {
+            item.children = Selectivity.processItems(item.children);
+        }
+
+        return item;
+    } else {
+        throw new Error('invalid item');
+    }
+};
+
+/**
+ * Helper function for processing an array of items.
+ *
+ * @param items Array of items to process. See processItem() for details about a single item.
+ *
+ * @return Array with items.
+ */
+Selectivity.processItems = function(items) {
+
+    if (Array.isArray(items)) {
+        return items.map(Selectivity.processItem);
+    } else {
+        throw new Error('invalid items');
+    }
+};
+
+/**
+ * Transforms text in order to find matches. The default implementation casts all strings to
+ * lower-case so that any matches found will be case-insensitive.
+ *
+ * @param string The string to transform.
+ *
+ * @return The transformed string.
+ */
+Selectivity.transformText = function(string) {
+
+    return string.toLowerCase();
+};
+
+module.exports = Selectivity;
+
+},{"13":13,"20":20,"44":44,"lodash/extend":"lodash/extend"}],36:[function(_dereq_,module,exports){
 'use strict';
 
-var escape = _dereq_(6);
+var escape = _dereq_(9);
 
-var Selectivity = _dereq_(17);
-
-_dereq_(23);
+var Selectivity = _dereq_(35);
+var Locale = _dereq_(24);
 
 /**
  * Default set of templates to use with Selectivity.js.
  *
- * Note that every template can be defined as either a string, a function returning a string (like
- * Handlebars templates, for instance) or as an object containing a render function (like Hogan.js
- * templates, for instance).
+ * Template can be defined as either a string, a function returning a string (like Handlebars
+ * templates, for instance), an object containing a render function (like Hogan.js templates, fo
+ * instance) or as a function returning a DOM element.
+ *
+ * Every template must return a single root element.
  */
 Selectivity.Templates = {
 
@@ -4746,7 +5047,7 @@ Selectivity.Templates = {
      * replaced with actual results.
      */
     loading: function() {
-        return '<div class="selectivity-loading">' + Selectivity.Locale.loading + '</div>';
+        return '<div class="selectivity-loading">' + Locale.loading + '</div>';
     },
 
     /**
@@ -4756,7 +5057,7 @@ Selectivity.Templates = {
      * clicked, will load more results.
      */
     loadMore: function() {
-        return '<div class="selectivity-load-more">' + Selectivity.Locale.loadMore + '</div>';
+        return '<div class="selectivity-load-more">' + Locale.loadMore + '</div>';
     },
 
     /**
@@ -4768,11 +5069,6 @@ Selectivity.Templates = {
      * 'selectivity-multiple-input' - The actual input element that allows the user to type to
      *                                search for more items. When selected items are added, they are
      *                                inserted right before this element.
-     * 'selectivity-width-detector' - This element is optional, but important to make sure the
-     *                                '.selectivity-multiple-input' element will fit in the
-     *                                container. The width detector also has the
-     *                                'select2-multiple-input' class on purpose to be able to detect
-     *                                the width of text entered in the input element.
      *
      * @param options Options object containing the following property:
      *                enabled - Boolean whether the input is enabled.
@@ -4781,10 +5077,7 @@ Selectivity.Templates = {
         return (
             '<div class="selectivity-multiple-input-container">' +
                 (options.enabled ? '<input type="text" autocomplete="off" autocorrect="off" ' +
-                                          'autocapitalize="off" ' +
-                                          'class="selectivity-multiple-input">' +
-                                   '<span class="selectivity-multiple-input ' +
-                                                'selectivity-width-detector"></span>'
+                                          'autocapitalize="off" class="selectivity-multiple-input">'
                                  : '<div class="selectivity-multiple-input ' +
                                                'selectivity-placeholder"></div>') +
                 '<div class="selectivity-clearfix"></div>' +
@@ -4829,7 +5122,6 @@ Selectivity.Templates = {
      *                term - Search term the user is searching for.
      */
     noResults: function(options) {
-        var Locale = Selectivity.Locale;
         return (
             '<div class="selectivity-error">' +
                 (options.term ? Locale.noResultsForTerm(options.term) : Locale.noResults) +
@@ -4979,168 +5271,127 @@ Selectivity.Templates = {
 
 };
 
-},{"17":17,"23":23,"6":6}],28:[function(_dereq_,module,exports){
+},{"24":24,"35":35,"9":9}],37:[function(_dereq_,module,exports){
 'use strict';
 
-var $ = window.jQuery || window.Zepto;
-
-var Selectivity = _dereq_(17);
-
-function defaultTokenizer(input, selection, createToken, options) {
-
-    var createTokenItem = options.createTokenItem || function(token) {
-        return token ? { id: token, text: token } : null;
-    };
-
-    var separators = options.tokenSeparators;
-
-    function hasToken(input) {
-        return input ? separators.some(function(separator) {
-            return input.indexOf(separator) > -1;
-        }) : false;
-    }
-
-    function takeToken(input) {
-        for (var i = 0, length = input.length; i < length; i++) {
-            if (separators.indexOf(input[i]) > -1) {
-                return { term: input.slice(0, i), input: input.slice(i + 1) };
-            }
-        }
-        return {};
-    }
-
-    while (hasToken(input)) {
-        var token = takeToken(input);
-        if (token.term) {
-            var item = createTokenItem(token.term);
-            if (item && !Selectivity.findById(selection, item.id)) {
-                createToken(item);
-            }
-        }
-        input = token.input;
-    }
-
-    return input;
-}
-
 /**
- * Option listener that provides a default tokenizer which is used when the tokenSeparators option
- * is specified.
+ * Returns a result item with a given item ID.
  *
- * @param options Options object. In addition to the options supported in the multi-input
- *                implementation, this may contain the following property:
- *                tokenSeparators - Array of string separators which are used to separate the search
- *                                  string into tokens. If specified and the tokenizer property is
- *                                  not set, the tokenizer property will be set to a function which
- *                                  splits the search term into tokens separated by any of the given
- *                                  separators. The tokens will be converted into selectable items
- *                                  using the 'createTokenItem' function. The default tokenizer also
- *                                  filters out already selected items.
+ * @param resultItems Array of DOM elements representing result items.
+ * @param itemId ID of the item to return.
+ *
+ * @param DOM element of the result item with the given item ID, or null if not found.
  */
-Selectivity.OptionListeners.push(function(selectivity, options) {
+module.exports = function(resultItems, itemId) {
 
-    if (options.tokenSeparators) {
-        options.allowedTypes = $.extend({ tokenSeparators: 'array' }, options.allowedTypes);
-
-        options.tokenizer = options.tokenizer || defaultTokenizer;
+    for (var i = 0, length = resultItems.length; i < length; i++) {
+        var resultItem = resultItems[i];
+        var resultId = resultItem.getAttribute('data-item-id');
+        if ((typeof itemId === 'number' ? parseInt(resultId, 10) : resultId) === itemId) {
+            return resultItem;
+        }
     }
-});
+    return null;
+};
 
-},{"17":17,"jquery":"jquery"}],29:[function(_dereq_,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 'use strict';
 
-var $ = window.jQuery || window.Zepto;
+/**
+ * Returns the CSS selector for selecting a specific item by ID.
+ *
+ * @param selector Generic CSS selector to identify items.
+ * @param id ID of the item to select.
+ */
+module.exports = function(selector, id) {
 
-var Selectivity = _dereq_(17);
+    var quotedId = '"' + ('' + id).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+    return selector + '[data-item-id=' + quotedId + ']';
+};
 
-function createSelectivityNextToSelectElement($el, options) {
-
-    var data = (options.multiple ? [] : null);
-
-    var mapOptions = function() {
-        var $this = $(this);
-        if ($this.is('option')) {
-            var text = $this.text();
-            var id = $this.attr('value');
-            if (id === undefined) {
-                id = text;
-            }
-            if ($this.prop('selected')) {
-                var item = { id: id, text: text };
-                if (options.multiple) {
-                    data.push(item);
-                } else {
-                    data = item;
-                }
-            }
-
-            return {
-                id: id,
-                text: $this.attr('label') || text
-            };
-        } else {
-            return {
-                text: $this.attr('label'),
-                children: $this.children('option,optgroup').map(mapOptions).get()
-            };
-        }
-    };
-
-    options.allowClear = ('allowClear' in options ? options.allowClear : !$el.prop('required'));
-
-    var items = $el.children('option,optgroup').map(mapOptions).get();
-    options.items = (options.query ? null : items);
-
-    options.placeholder = options.placeholder || $el.data('placeholder') || '';
-
-    options.data = data;
-
-    var classes = ($el.attr('class') || 'selectivity-input').split(' ');
-    if (classes.indexOf('selectivity-input') === -1) {
-        classes.push('selectivity-input');
-    }
-
-    var $div = $('<div>').attr({
-        'id': $el.attr('id'),
-        'class': classes.join(' '),
-        'style': $el.attr('style'),
-        'data-name': $el.attr('name')
-    });
-    $div.insertAfter($el);
-    $el.hide();
-    return $div;
-}
-
-function bindTraditionalSelectEvents(selectivity) {
-    var $el = selectivity.$el;
-    $el.on('selectivity-selected', function(event) {
-        var value = selectivity.value();
-        $el.prev('select')
-            .val($.type(value) === 'array' ? [event.item.id].concat(value) : event.item.id)
-            .change();
-    });
-}
+},{}],39:[function(_dereq_,module,exports){
+'use strict';
 
 /**
- * Option listener providing support for converting traditional <select> boxes into Selectivity
- * instances.
+ * Returns the keyCode value of the given event.
  */
-Selectivity.OptionListeners.push(function(selectivity, options) {
+module.exports = function(event) {
 
-    var $el = selectivity.$el;
-    if ($el.is('select')) {
-        if ($el.attr('autofocus')) {
-            setTimeout(function() {
-                selectivity.focus();
-            }, 1);
-        }
+    return event.which || event.keyCode || 0;
+};
 
-        selectivity.$el = createSelectivityNextToSelectElement($el, options);
-        selectivity.$el[0].selectivity = selectivity;
+},{}],40:[function(_dereq_,module,exports){
+'use strict';
 
-        bindTraditionalSelectEvents(selectivity);
+/**
+ * Returns whether the given element matches the given selector.
+ */
+module.exports = function(el, selector) {
+
+    var method = el.matches || el.webkitMatchesSelector ||
+                 el.mozMatchesSelector || el.msMatchesSelector;
+    return method.call(el, selector);
+};
+
+},{}],41:[function(_dereq_,module,exports){
+'use strict';
+
+/**
+ * Parses an HTML string and returns the resulting DOM element.
+ *
+ * @param html HTML representation of the element to parse.
+ */
+module.exports = function(html) {
+
+    var div = document.createElement('div');
+    div.innerHTML = html;
+    return div.firstChild;
+};
+
+},{}],42:[function(_dereq_,module,exports){
+'use strict';
+
+/**
+ * Removes a DOM element.
+ *
+ * @param el The element to remove.
+ */
+module.exports = function(el) {
+
+    if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
     }
-});
+};
 
-},{"17":17,"jquery":"jquery"}]},{},[18])(18)
+},{}],43:[function(_dereq_,module,exports){
+'use strict';
+
+/**
+ * Stops event propagation.
+ *
+ * @param event The event to stop from propagating.
+ */
+module.exports = function(event) {
+
+    event.stopPropagation();
+};
+
+},{}],44:[function(_dereq_,module,exports){
+'use strict';
+
+/**
+ * Toggles a CSS class on an element.
+ *
+ * @param el The element on which to toggle the CSS class.
+ * @param className The CSS class to toggle.
+ * @param force If true, the class is added. If false, the class is removed.
+ */
+module.exports = function(el, className, force) {
+
+    if (el) {
+        el.classList[force ? 'add' : 'remove'](className);
+    }
+};
+
+},{}]},{},[34])(34)
 });
